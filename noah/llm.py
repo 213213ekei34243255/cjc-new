@@ -98,6 +98,16 @@ def gemini_configured():
     return bool(config.GEMINI_API_KEY)
 
 
+def _sse_lines(resp):
+    """Decoded lines of a streaming response.
+
+    Never use iter_lines(decode_unicode=True) here: for `text/event-stream` with no charset (what Gemini and llama-server send)
+    `requests` assumes ISO-8859-1, which turns every Hindi/Kannada/Tamil/Malayalam/Telugu letter and the rupee sign into
+    garbage like 'à¤¨à¤®'. The wire format is always UTF-8, so we decode the bytes ourselves."""
+    for raw in resp.iter_lines():
+        yield raw.decode("utf-8", errors="replace") if isinstance(raw, bytes) else raw
+
+
 def _to_gemini_contents(messages):
     contents = []
     for m in messages:
@@ -232,7 +242,7 @@ def _gemini_stream(system, messages, max_tokens, temperature):
             raise
         yielded = False
         try:
-            for raw in resp.iter_lines(decode_unicode=True):
+            for raw in _sse_lines(resp):
                 if not raw or not raw.startswith("data:"):
                     continue
                 chunk = raw[5:].strip()
@@ -314,7 +324,7 @@ def _qwen_stream(system, messages, max_tokens, temperature):
         raise LLMError(f"Qwen failed: {exc.__class__.__name__}") from exc
     yielded = False
     try:
-        for raw in resp.iter_lines(decode_unicode=True):
+        for raw in _sse_lines(resp):
             if not raw or not raw.startswith("data:"):
                 continue
             chunk = raw[5:].strip()
