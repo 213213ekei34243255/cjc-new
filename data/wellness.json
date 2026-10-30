@@ -1,0 +1,22 @@
+{
+  "helplines": [
+    {"name": "Tele-MANAS (free, 24x7, many languages)", "phone": "14416", "alt": "1800-891-4416", "note": "Government of India mental health helpline"},
+    {"name": "Emergency services", "phone": "112", "alt": "", "note": "If you or someone else is in immediate danger"}
+  ],
+  "college_line": "You can also walk in to the college Counselling / Wellness Centre or call the office on +91 080 4012 9292 (Mon-Fri 8:30-4:30).",
+  "moods": [
+    {"value": 1, "label": "Really low"},
+    {"value": 2, "label": "Down"},
+    {"value": 3, "label": "Okay"},
+    {"value": 4, "label": "Good"},
+    {"value": 5, "label": "Great"}
+  ],
+  "concerns": ["Exams and marks", "Family", "Friends or relationships", "Sleep and energy", "Future and career", "Feeling alone", "Something else"],
+  "grounding": [
+    "Name 5 things you can see",
+    "Touch 4 things around you",
+    "Listen for 3 sounds",
+    "Notice 2 things you can smell",
+    "Take 1 slow breath"
+  ]
+}

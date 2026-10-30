@@ -1,0 +1,10 @@
+{
+  "days_ahead": 21,
+  "weekdays": [0, 1, 2, 3, 4],
+  "times": ["10:00", "11:00", "12:00", "14:00", "15:00"],
+  "capacity": 3,
+  "blackout_dates": [],
+  "min_hours_ahead": 4,
+  "place": "Christ Junior College, Dharmaram Campus, Hosur Road, Bengaluru 560029",
+  "note": "Visits run during office hours (Mon-Fri). Please carry a photo ID. The office will confirm your slot by phone."
+}

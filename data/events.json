@@ -1,0 +1,67 @@
+[
+  {
+    "id": "cjc-mun-2026",
+    "title": "CJC MUN 2026",
+    "blurb": "The college's Model United Nations conference, run by MUNSOC. Registration is open on the MUN website, where dates and committees are announced.",
+    "starts": "",
+    "ends": "",
+    "location": "Christ Junior College, Bengaluru",
+    "link_label": "Register on cjcmun.com",
+    "link_url": "https://cjcmun.com",
+    "contact": "cjcmun@cjc.christcollege.edu",
+    "tag": "conference",
+    "sort": 1
+  },
+  {
+    "id": "ibdp-2027-28",
+    "title": "IBDP admissions 2027-28",
+    "blurb": "Applications for the IB Diploma Programme 2027-28 are open. The process is an admission test, an interview and then fee payment.",
+    "starts": "",
+    "ends": "",
+    "location": "",
+    "link_label": "IBDP admission enquiry",
+    "link_url": "https://christjuniorcollege.in/admission-enquiry-ibdp.php",
+    "contact": "+91 78921 87650",
+    "tag": "admission",
+    "sort": 2
+  },
+  {
+    "id": "xite",
+    "title": "XITE",
+    "blurb": "One of the college's annual events. Dates are announced by the college.",
+    "starts": "",
+    "ends": "",
+    "location": "",
+    "link_label": "Student life",
+    "link_url": "https://christjuniorcollege.in/student-life.php",
+    "contact": "",
+    "tag": "fest",
+    "sort": 10
+  },
+  {
+    "id": "magnachrista",
+    "title": "Magnachrista",
+    "blurb": "One of the college's annual events. Dates are announced by the college.",
+    "starts": "",
+    "ends": "",
+    "location": "",
+    "link_label": "Student life",
+    "link_url": "https://christjuniorcollege.in/student-life.php",
+    "contact": "",
+    "tag": "fest",
+    "sort": 11
+  },
+  {
+    "id": "magnasports",
+    "title": "Magnasports",
+    "blurb": "The college's annual sports event. Dates are announced by the college.",
+    "starts": "",
+    "ends": "",
+    "location": "",
+    "link_label": "Student life",
+    "link_url": "https://christjuniorcollege.in/student-life.php",
+    "contact": "",
+    "tag": "sports",
+    "sort": 12
+  }
+]

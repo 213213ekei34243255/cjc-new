@@ -1,0 +1,36 @@
+{
+  "boards": [
+    {"id": "state", "label": "Karnataka State Board (SSLC)"},
+    {"id": "cbse", "label": "CBSE"},
+    {"id": "icse", "label": "ICSE / ISC"},
+    {"id": "other", "label": "Another state board or IGCSE"}
+  ],
+  "pu": {
+    "title": "1st PUC admission documents",
+    "items": [
+      {"id": "marks", "text": "Class X annual examination marks statement", "note": "Used for marks verification."},
+      {"id": "hall", "text": "Class X annual examination hall ticket", "note": "Verifies the parent's name. If you do not have it, bring the original Class X marks statement."},
+      {"id": "tc", "text": "Transfer Certificate (TC) copy"},
+      {"id": "caste", "text": "Caste certificate issued by the Government of Karnataka", "note": "Only if you are claiming a caste-category benefit.", "optional": true},
+      {"id": "aadhaar", "text": "Aadhaar card copy"},
+      {"id": "pen", "text": "PEN (Permanent Education Number) issued by your school"}
+    ],
+    "non_state": {
+      "id": "consumer",
+      "text": "Consumer Number and Provisional Eligibility Certificate",
+      "note": "ICSE, CBSE and other-board candidates must get a Consumer Number to generate the Provisional Eligibility Certificate. Enter your details exactly as on your Class X marks card. Karnataka State Board candidates do not need this.",
+      "link_label": "Open the eligibility portal",
+      "link_url": "https://dpue-pragathi.karnataka.gov.in/eligibilitycertificate/Homep"
+    },
+    "steps": ["Apply online", "The college verifies your documents", "A secure payment link is emailed to your registered email address", "Pay the fee online"],
+    "footer": "PUC applications are currently closed. This list is for the next admission cycle. Please confirm with the admissions office."
+  },
+  "ibdp": {
+    "title": "IBDP admission",
+    "items": [],
+    "steps": ["Admission enquiry / online registration", "Admission test", "Interview", "Fee payment"],
+    "footer": "The IBDP office confirms the exact document list during the process. Call +91 78921 87650 or +91 080 4012 9298.",
+    "link_label": "IBDP admissions process",
+    "link_url": "https://christjuniorcollege.in/admissions-process-ibdp.php"
+  }
+}
