@@ -252,7 +252,7 @@ def export_conversations():
 @app.route("/widget.js")
 def widget_js():
     resp = send_from_directory(app.static_folder, "widget.js")
-    resp.headers["Cache-Control"] = f"public, max-age={config.env_int('WIDGET_CACHE_SECONDS', 300, 0, 86400)}"
+    resp.headers["Cache-Control"] = f"public, max-age={config.env_int('WIDGET_CACHE_SECONDS', 0, 0, 86400)}"
     return resp
 
 
