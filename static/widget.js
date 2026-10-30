@@ -23,7 +23,7 @@
     /* ============================================================================================
      * 1. Small utilities
      * ========================================================================================== */
-    var VERSION = '2026-10-31.4';
+    var VERSION = '2026-10-31.5';
     var LS = {
       get: function (k, d) { try { var v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } },
       set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) { /* private mode */ } },
@@ -249,6 +249,7 @@
       '.nw-ib2.on{background:#d92d20;color:#fff;animation:nw-pulse-red 1.2s infinite}',
       '.nw-send{background:linear-gradient(135deg,#e0148c,#a30e68);color:#fff;box-shadow:0 6px 16px rgba(224,20,140,.38)}.nw-send:disabled{opacity:.45;box-shadow:none;transform:none}',
       '.nw-win.haspanel .nw-comp,.nw-win.haspanel .nw-foot{display:none}',
+      '.nw-ver{opacity:.7;white-space:nowrap}',
       '.nw-foot{position:relative;z-index:8;flex:none;font-size:11px;color:var(--muted);text-align:center;padding:0 12px 8px;background:var(--surface)}.nw-foot a{color:var(--muted)}',
       '.nw-banner{flex:none;display:flex;align-items:center;gap:8px;padding:8px 12px;background:linear-gradient(90deg,#4f46e5,#7c3aed);color:#fff;font-size:12.5px}.nw-banner[hidden]{display:none}.nw-banner button{margin-left:auto;border:0;border-radius:12px;padding:3px 10px;background:rgba(255,255,255,.2);color:#fff}',
       /* cards in chat */
@@ -415,7 +416,7 @@
     bindText($.sendb, 'send', 'aria-label');
     $.comp = h('div', { class: 'nw-comp' }, $.tools, $.input, $.mic, $.sendb);
     $.privacy = h('span', {}); bindText($.privacy, 'privacy');
-    $.foot = h('div', { class: 'nw-foot' }, $.privacy, h('br'), '© 2026 ', h('a', { href: 'https://www.jonahbrowser.com', target: '_blank', rel: 'noopener noreferrer' }, 'CogniAI Studios'), '. All rights reserved.');
+    $.foot = h('div', { class: 'nw-foot' }, $.privacy, h('br'), '© 2026 ', h('a', { href: 'https://www.jonahbrowser.com', target: '_blank', rel: 'noopener noreferrer' }, 'CogniAI Studios'), '. All rights reserved.', h('span', { class: 'nw-ver', title: 'Noah widget ' + VERSION }, ' · build ' + VERSION.split('.').pop()));
     $.win = h('div', { class: 'nw-win', role: 'dialog', 'aria-label': 'Noah chat assistant' }, $.head, $.pop, $.morepop, $.body, $.comp, $.foot);
     var root = h('div', { class: 'nw', 'data-theme': 'light' }, $.teaser, $.win, $.fab);
     shadow.appendChild(root);
