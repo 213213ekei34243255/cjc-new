@@ -23,6 +23,7 @@
     /* ============================================================================================
      * 1. Small utilities
      * ========================================================================================== */
+    var VERSION = '2026-10-31.4';
     var LS = {
       get: function (k, d) { try { var v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } },
       set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) { /* private mode */ } },
@@ -241,14 +242,14 @@
       /* chips + composer */
       '.nw-chips{flex:none;display:flex;gap:8px;padding:6px 12px 8px;overflow-x:auto;scrollbar-width:none}.nw-chips::-webkit-scrollbar{display:none}.nw-chips:empty{display:none}',
       '.nw-chip{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--text);padding:7px 13px;border-radius:999px;font-size:13px;white-space:nowrap;transition:transform .15s,box-shadow .15s,border-color .15s;animation:nw-in .35s both}.nw-chip:hover{transform:translateY(-2px);border-color:var(--brand);box-shadow:0 6px 14px rgba(224,20,140,.16)}',
-      '.nw-comp{flex:none;display:flex;align-items:flex-end;gap:8px;padding:10px 12px 8px;background:var(--surface);border-top:1px solid var(--line)}',
+      '.nw-comp{position:relative;z-index:8;flex:none;display:flex;align-items:flex-end;gap:8px;padding:10px 12px 8px;background:var(--surface);border-top:1px solid var(--line)}',
       '.nw-input{flex:1;min-height:40px;max-height:110px;overflow-y:hidden;resize:none;border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:20px;padding:10px 14px;font:inherit;outline:none;transition:border-color .15s,box-shadow .15s}',
       '.nw-input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(224,20,140,.15)}',
       '.nw-ib2{width:40px;height:40px;border:0;border-radius:50%;background:var(--surface2);color:var(--text);display:grid;place-items:center;flex:none;transition:transform .15s,background .15s}.nw-ib2:hover{transform:scale(1.07)}',
       '.nw-ib2.on{background:#d92d20;color:#fff;animation:nw-pulse-red 1.2s infinite}',
       '.nw-send{background:linear-gradient(135deg,#e0148c,#a30e68);color:#fff;box-shadow:0 6px 16px rgba(224,20,140,.38)}.nw-send:disabled{opacity:.45;box-shadow:none;transform:none}',
       '.nw-win.haspanel .nw-comp,.nw-win.haspanel .nw-foot{display:none}',
-      '.nw-foot{flex:none;font-size:11px;color:var(--muted);text-align:center;padding:0 12px 8px;background:var(--surface)}.nw-foot a{color:var(--muted)}',
+      '.nw-foot{position:relative;z-index:8;flex:none;font-size:11px;color:var(--muted);text-align:center;padding:0 12px 8px;background:var(--surface)}.nw-foot a{color:var(--muted)}',
       '.nw-banner{flex:none;display:flex;align-items:center;gap:8px;padding:8px 12px;background:linear-gradient(90deg,#4f46e5,#7c3aed);color:#fff;font-size:12.5px}.nw-banner[hidden]{display:none}.nw-banner button{margin-left:auto;border:0;border-radius:12px;padding:3px 10px;background:rgba(255,255,255,.2);color:#fff}',
       /* cards in chat */
       '.nw-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px;animation:nw-in .4s both;overflow:hidden}',
@@ -401,7 +402,7 @@
     $.chips = h('div', { class: 'nw-chips' });
     $.panel = h('div', { class: 'nw-panel', 'aria-hidden': 'true' });
     $.scrim = h('div', { class: 'nw-scrim', onclick: function () { hideSheet(); } });
-    $.sheet = h('div', { class: 'nw-sheet' });
+    $.sheet = h('div', { class: 'nw-sheet', hidden: true });
     $.toast = h('div', { class: 'nw-toast', role: 'status' });
     $.body = h('div', { class: 'nw-body' }, $.banner, $.msgs, $.chips, $.scrim, $.sheet, $.panel, $.toast);
     $.input = h('textarea', { class: 'nw-input', rows: '1', maxlength: '1200', 'aria-label': 'Message', onkeydown: function (e) { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send($.input.value); } }, oninput: autoGrow });
@@ -419,7 +420,7 @@
     var root = h('div', { class: 'nw', 'data-theme': 'light' }, $.teaser, $.win, $.fab);
     shadow.appendChild(root);
     shadow.addEventListener('click', function () { $.pop.hidden = true; $.morepop.hidden = true; });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && S.open) { if ($.panel.classList.contains('open')) closePanel(); else close(); } });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && S.open) { if ($.sheet.classList.contains('open')) hideSheet(); else if ($.panel.classList.contains('open')) closePanel(); else close(); } });
 
     // gradient used by the progress rings
     var defs = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -712,13 +713,20 @@
       if (!quiet && m === 'chat') setChips(S.ctx ? S.ctx.chips : []);
     }
 
+    var sheetTimer = null;
     function showSheet() {
+      clearTimeout(sheetTimer);
       clear($.sheet);
-      $.sheet.appendChild(h('h3', {}, T('tools'), h('button', { class: 'nw-pb', 'aria-label': 'Close', onclick: hideSheet }, icon('x', 16))));
-      $.sheet.appendChild(welcomeTiles());
+      put($.sheet, h('h3', {}, T('tools'), h('button', { class: 'nw-pb', 'aria-label': 'Close', onclick: hideSheet }, icon('x', 16))), welcomeTiles());
+      $.sheet.hidden = false;
+      void $.sheet.offsetHeight;                     // force layout so the slide-up transition runs (no timers or frames needed)
       $.scrim.classList.add('open'); $.sheet.classList.add('open');
     }
-    function hideSheet() { $.scrim.classList.remove('open'); $.sheet.classList.remove('open'); }
+    function hideSheet() {
+      $.scrim.classList.remove('open'); $.sheet.classList.remove('open');
+      clearTimeout(sheetTimer);
+      sheetTimer = setTimeout(function () { if (!$.sheet.classList.contains('open')) $.sheet.hidden = true; }, 360);
+    }
 
     /* ---- voice ----------------------------------------------------------------------------------- */
     var SR = window.SpeechRecognition || window.webkitSpeechRecognition, recognizer = null;
@@ -1508,7 +1516,7 @@
             h('div', { class: 'nw-sec' }, 'System'), h('div', { class: 'nw-card' },
               kv('Main model', l.gemini.configured ? l.gemini.model + (l.gemini.breaker.open_for_s ? ' (paused ' + l.gemini.breaker.open_for_s + 's after errors)' : '') : 'NOT CONFIGURED - set GEMINI_API_KEY'),
               kv('Backup model', l.qwen.enabled ? 'Qwen' + (l.qwen.breaker.open_for_s ? ' (paused)' : '') : 'off'), kv('Last Gemini error', l.gemini.breaker.last_error || 'none'),
-              kv('Email alerts', d.notifications.email ? 'on' : 'off'), kv('Webhook', d.notifications.webhook ? 'on' : 'off'), kv('WhatsApp', d.notifications.whatsapp ? 'on' : 'off'), kv('Chat log kept', d.retention_days + ' days')),
+              kv('Email alerts', d.notifications.email ? 'on' : 'off'), kv('Webhook', d.notifications.webhook ? 'on' : 'off'), kv('WhatsApp', d.notifications.whatsapp ? 'on' : 'off'), kv('Chat log kept', d.retention_days + ' days'), kv('Widget file version', VERSION)),
             h('button', { class: 'nw-btn ghost block', style: 'margin-top:12px', onclick: function () { mutate('POST', '/api/staff/purge', {}, function (r) { toast('Removed ' + r.removed + ' old rows'); }); } }, icon('trash', 15), 'Delete chat logs older than the retention period'));
         });
       }
@@ -1649,7 +1657,7 @@
     if (/[#?&]noah=staff/.test(location.href)) setTimeout(function () { openPanel('staff'); }, 500);
 
     var publicApi = {
-      baseUrl: BASE, sessionId: S.sid,
+      version: VERSION, baseUrl: BASE, sessionId: S.sid,
       open: open, close: close, toggle: toggle,
       send: function (msg) { open(); send(msg); },
       openPanel: function (id, args) { open(); openPanel(id, args); },
@@ -1658,6 +1666,6 @@
     };
     window.NOAH_WIDGET = publicApi;
     window.VERONICA_WIDGET = publicApi;      // name used by the previous widget; kept so any page code keeps working
-    console.log('[NOAH] widget ready');
+    console.log('[NOAH] widget ready, version ' + VERSION);
   }
 })();
