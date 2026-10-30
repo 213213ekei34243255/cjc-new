@@ -23,7 +23,7 @@
     /* ============================================================================================
      * 1. Small utilities
      * ========================================================================================== */
-    var VERSION = '2026-10-31.5';
+    var VERSION = '2026-10-31.6';
     var LS = {
       get: function (k, d) { try { var v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } },
       set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) { /* private mode */ } },
@@ -65,7 +65,7 @@
     function md(text) {
       var lines = esc(text || '').split('\n'), out = [], list = false;
       lines.forEach(function (line) {
-        var m = /^\s*(?:[-*•])\s+(.*)$/.exec(line);
+        var m = /^\s*(?:[-*\u2022])\s+(.*)$/.exec(line);
         if (m) { if (!list) { out.push('<ul>'); list = true; } out.push('<li>' + inline(m[1]) + '</li>'); return; }
         if (list) { out.push('</ul>'); list = false; }
         out.push(line.trim() ? inline(line) + '<br>' : '<br>');
@@ -80,7 +80,7 @@
 
     function uid() { return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'sess-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10); }
     function pad(n) { return (n < 10 ? '0' : '') + n; }
-    function inr(n) { return typeof n === 'number' ? '₹' + n.toLocaleString('en-IN') : String(n); }
+    function inr(n) { return typeof n === 'number' ? '\u20B9' + n.toLocaleString('en-IN') : String(n); }
     function prettyDate(iso) { var d = new Date(iso + 'T00:00:00'); return d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }); }
     function reduceMotion() { return window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches; }
 
@@ -89,17 +89,17 @@
      * Native-speaker review is recommended before launch.
      * ========================================================================================== */
     var LANGS = [
-      { code: 'en', native: 'English', speech: 'en-IN' }, { code: 'kn', native: 'ಕನ್ನಡ', speech: 'kn-IN' },
-      { code: 'hi', native: 'हिन्दी', speech: 'hi-IN' }, { code: 'ta', native: 'தமிழ்', speech: 'ta-IN' },
-      { code: 'ml', native: 'മലയാളം', speech: 'ml-IN' }, { code: 'te', native: 'తెలుగు', speech: 'te-IN' }
+      { code: 'en', native: 'English', speech: 'en-IN' }, { code: 'kn', native: '\u0C95\u0CA8\u0CCD\u0CA8\u0CA1', speech: 'kn-IN' },
+      { code: 'hi', native: '\u0939\u093F\u0928\u094D\u0926\u0940', speech: 'hi-IN' }, { code: 'ta', native: '\u0BA4\u0BAE\u0BBF\u0BB4\u0BCD', speech: 'ta-IN' },
+      { code: 'ml', native: '\u0D2E\u0D32\u0D2F\u0D3E\u0D33\u0D02', speech: 'ml-IN' }, { code: 'te', native: '\u0C24\u0C46\u0C32\u0C41\u0C17\u0C41', speech: 'te-IN' }
     ];
     var I18N = {
       en: { placeholder: 'Write a message...', send: 'Send', tools: 'Tools', listening: 'Listening...', back: 'Back', close: 'Close', language: 'Language', privacy: 'Chats may be read by college staff to improve answers.', advisor: 'Stream Advisor', callback: 'Talk to admissions', visit: 'Book a campus visit', documents: 'Documents checklist', careers: 'Career paths', events: 'Events', wellness: 'Wellness check-in', student: 'Student Zone', compare: 'PU vs IBDP', helpful: 'Helpful', notHelpful: 'Not helpful', copy: 'Copy', speak: 'Read aloud', mic: 'Speak', newChat: 'New chat', offline: 'Could not reach the server. Check your connection and try again.', thanks: 'Thanks for the feedback', welcome: 'What would you like to do?', online: 'Online', studyMode: 'Study helper mode', exit: 'Exit' },
-      hi: { placeholder: 'संदेश लिखें...', send: 'भेजें', tools: 'टूल्स', listening: 'सुन रहा हूँ...', back: 'वापस', close: 'बंद करें', language: 'भाषा', privacy: 'बेहतर उत्तरों के लिए कॉलेज स्टाफ़ चैट देख सकता है।', advisor: 'स्ट्रीम सलाहकार', callback: 'एडमिशन टीम से बात करें', visit: 'कैंपस विज़िट बुक करें', documents: 'दस्तावेज़ सूची', careers: 'करियर के रास्ते', events: 'कार्यक्रम', wellness: 'वेलनेस चेक-इन', student: 'स्टूडेंट ज़ोन', welcome: 'आप क्या करना चाहेंगे?' },
-      kn: { placeholder: 'ಸಂದೇಶ ಬರೆಯಿರಿ...', send: 'ಕಳುಹಿಸಿ', tools: 'ಸಾಧನಗಳು', listening: 'ಆಲಿಸುತ್ತಿದ್ದೇನೆ...', back: 'ಹಿಂದೆ', close: 'ಮುಚ್ಚಿ', language: 'ಭಾಷೆ', privacy: 'ಉತ್ತಮ ಉತ್ತರಗಳಿಗಾಗಿ ಕಾಲೇಜು ಸಿಬ್ಬಂದಿ ಚಾಟ್‌ಗಳನ್ನು ನೋಡಬಹುದು.', advisor: 'ಸ್ಟ್ರೀಮ್ ಸಲಹೆಗಾರ', callback: 'ಪ್ರವೇಶ ತಂಡದೊಂದಿಗೆ ಮಾತನಾಡಿ', visit: 'ಕ್ಯಾಂಪಸ್ ಭೇಟಿ ಬುಕ್ ಮಾಡಿ', documents: 'ದಾಖಲೆಗಳ ಪಟ್ಟಿ', careers: 'ವೃತ್ತಿ ಮಾರ್ಗಗಳು', events: 'ಕಾರ್ಯಕ್ರಮಗಳು', wellness: 'ಯೋಗಕ್ಷೇಮ ಪರಿಶೀಲನೆ', student: 'ವಿದ್ಯಾರ್ಥಿ ವಿಭಾಗ', welcome: 'ನೀವು ಏನು ಮಾಡಲು ಬಯಸುವಿರಿ?' },
-      ta: { placeholder: 'செய்தியை எழுதுங்கள்...', send: 'அனுப்பு', tools: 'கருவிகள்', listening: 'கேட்கிறேன்...', back: 'பின்', close: 'மூடு', language: 'மொழி', privacy: 'சிறந்த பதில்களுக்காக கல்லூரி ஊழியர்கள் அரட்டைகளைப் பார்க்கலாம்.', advisor: 'ஸ்ட்ரீம் ஆலோசகர்', callback: 'சேர்க்கைக் குழுவிடம் பேசுங்கள்', visit: 'வளாக வருகையை பதிவு செய்யுங்கள்', documents: 'ஆவணப் பட்டியல்', careers: 'தொழில் வழிகள்', events: 'நிகழ்வுகள்', wellness: 'நலன் சோதனை', student: 'மாணவர் மண்டலம்', welcome: 'நீங்கள் என்ன செய்ய விரும்புகிறீர்கள்?' },
-      ml: { placeholder: 'സന്ദേശം എഴുതുക...', send: 'അയയ്ക്കുക', tools: 'ടൂളുകൾ', listening: 'കേൽക്കുന്നു...', back: 'തിരികെ', close: 'അടയ്ക്കുക', language: 'ഭാഷ', privacy: 'മികച്ച ഉത്തരങ്ങൾക്കായി കോളേജ് സ്റ്റാഫിന് ചാറ്റുകൾ കാണാം.', advisor: 'സ്ട്രീം ഉപദേഷ്ടാവ്', callback: 'പ്രവേശന ടീമുമായി സംസാരിക്കുക', visit: 'ക്യാമ്പസ് സന്ദർശനം ബുക്ക് ചെയ്യുക', documents: 'രേഖകളുടെ പട്ടിക', careers: 'കരിയർ വഴികൾ', events: 'പരിപാടികൾ', wellness: 'ക്ഷേമ പരിശോധന', student: 'വിദ്യാർത്ഥി മേഖല', welcome: 'നിങ്ങൾ എന്ത് ചെയ്യാൻ ആഗ്രഹിക്കുന്നു?' },
-      te: { placeholder: 'సందేశం రాయండి...', send: 'పంపండి', tools: 'సాధనాలు', listening: 'వింటున్నాను...', back: 'వెనుకకు', close: 'మూసివేయి', language: 'భాష', privacy: 'మెరుగైన సమాధానాల కోసం కళాశాల సిబ్బంది చాట్‌లను చూడవచ్చు.', advisor: 'స్ట్రీమ్ సలహాదారు', callback: 'ప్రవేశ బృందంతో మాట్లాడండి', visit: 'క్యాంపస్ సంస్లేషను బుక్ చేయండి', documents: 'పత్రాల జాబితా', careers: 'కెరీర్ మార్గాలు', events: 'కార్యక్రమాలు', wellness: 'ఆరోగ్య తనిఖీ', student: 'విద్యార్థి జోన్', welcome: 'మీరు ఏమి చేయాలనుకుంటున్నారు?' }
+      hi: { placeholder: '\u0938\u0902\u0926\u0947\u0936 \u0932\u093F\u0916\u0947\u0902...', send: '\u092D\u0947\u091C\u0947\u0902', tools: '\u091F\u0942\u0932\u094D\u0938', listening: '\u0938\u0941\u0928 \u0930\u0939\u093E \u0939\u0942\u0901...', back: '\u0935\u093E\u092A\u0938', close: '\u092C\u0902\u0926 \u0915\u0930\u0947\u0902', language: '\u092D\u093E\u0937\u093E', privacy: '\u092C\u0947\u0939\u0924\u0930 \u0909\u0924\u094D\u0924\u0930\u094B\u0902 \u0915\u0947 \u0932\u093F\u090F \u0915\u0949\u0932\u0947\u091C \u0938\u094D\u091F\u093E\u092B\u093C \u091A\u0948\u091F \u0926\u0947\u0916 \u0938\u0915\u0924\u093E \u0939\u0948\u0964', advisor: '\u0938\u094D\u091F\u094D\u0930\u0940\u092E \u0938\u0932\u093E\u0939\u0915\u093E\u0930', callback: '\u090F\u0921\u092E\u093F\u0936\u0928 \u091F\u0940\u092E \u0938\u0947 \u092C\u093E\u0924 \u0915\u0930\u0947\u0902', visit: '\u0915\u0948\u0902\u092A\u0938 \u0935\u093F\u091C\u093C\u093F\u091F \u092C\u0941\u0915 \u0915\u0930\u0947\u0902', documents: '\u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C\u093C \u0938\u0942\u091A\u0940', careers: '\u0915\u0930\u093F\u092F\u0930 \u0915\u0947 \u0930\u093E\u0938\u094D\u0924\u0947', events: '\u0915\u093E\u0930\u094D\u092F\u0915\u094D\u0930\u092E', wellness: '\u0935\u0947\u0932\u0928\u0947\u0938 \u091A\u0947\u0915-\u0907\u0928', student: '\u0938\u094D\u091F\u0942\u0921\u0947\u0902\u091F \u091C\u093C\u094B\u0928', welcome: '\u0906\u092A \u0915\u094D\u092F\u093E \u0915\u0930\u0928\u093E \u091A\u093E\u0939\u0947\u0902\u0917\u0947?' },
+      kn: { placeholder: '\u0CB8\u0C82\u0CA6\u0CC7\u0CB6 \u0CAC\u0CB0\u0CC6\u0CAF\u0CBF\u0CB0\u0CBF...', send: '\u0C95\u0CB3\u0CC1\u0CB9\u0CBF\u0CB8\u0CBF', tools: '\u0CB8\u0CBE\u0CA7\u0CA8\u0C97\u0CB3\u0CC1', listening: '\u0C86\u0CB2\u0CBF\u0CB8\u0CC1\u0CA4\u0CCD\u0CA4\u0CBF\u0CA6\u0CCD\u0CA6\u0CC7\u0CA8\u0CC6...', back: '\u0CB9\u0CBF\u0C82\u0CA6\u0CC6', close: '\u0CAE\u0CC1\u0C9A\u0CCD\u0C9A\u0CBF', language: '\u0CAD\u0CBE\u0CB7\u0CC6', privacy: '\u0C89\u0CA4\u0CCD\u0CA4\u0CAE \u0C89\u0CA4\u0CCD\u0CA4\u0CB0\u0C97\u0CB3\u0CBF\u0C97\u0CBE\u0C97\u0CBF \u0C95\u0CBE\u0CB2\u0CC7\u0C9C\u0CC1 \u0CB8\u0CBF\u0CAC\u0CCD\u0CAC\u0C82\u0CA6\u0CBF \u0C9A\u0CBE\u0C9F\u0CCD\u200C\u0C97\u0CB3\u0CA8\u0CCD\u0CA8\u0CC1 \u0CA8\u0CCB\u0CA1\u0CAC\u0CB9\u0CC1\u0CA6\u0CC1.', advisor: '\u0CB8\u0CCD\u0C9F\u0CCD\u0CB0\u0CC0\u0CAE\u0CCD \u0CB8\u0CB2\u0CB9\u0CC6\u0C97\u0CBE\u0CB0', callback: '\u0CAA\u0CCD\u0CB0\u0CB5\u0CC7\u0CB6 \u0CA4\u0C82\u0CA1\u0CA6\u0CCA\u0C82\u0CA6\u0CBF\u0C97\u0CC6 \u0CAE\u0CBE\u0CA4\u0CA8\u0CBE\u0CA1\u0CBF', visit: '\u0C95\u0CCD\u0CAF\u0CBE\u0C82\u0CAA\u0CB8\u0CCD \u0CAD\u0CC7\u0C9F\u0CBF \u0CAC\u0CC1\u0C95\u0CCD \u0CAE\u0CBE\u0CA1\u0CBF', documents: '\u0CA6\u0CBE\u0C96\u0CB2\u0CC6\u0C97\u0CB3 \u0CAA\u0C9F\u0CCD\u0C9F\u0CBF', careers: '\u0CB5\u0CC3\u0CA4\u0CCD\u0CA4\u0CBF \u0CAE\u0CBE\u0CB0\u0CCD\u0C97\u0C97\u0CB3\u0CC1', events: '\u0C95\u0CBE\u0CB0\u0CCD\u0CAF\u0C95\u0CCD\u0CB0\u0CAE\u0C97\u0CB3\u0CC1', wellness: '\u0CAF\u0CCB\u0C97\u0C95\u0CCD\u0CB7\u0CC7\u0CAE \u0CAA\u0CB0\u0CBF\u0CB6\u0CC0\u0CB2\u0CA8\u0CC6', student: '\u0CB5\u0CBF\u0CA6\u0CCD\u0CAF\u0CBE\u0CB0\u0CCD\u0CA5\u0CBF \u0CB5\u0CBF\u0CAD\u0CBE\u0C97', welcome: '\u0CA8\u0CC0\u0CB5\u0CC1 \u0C8F\u0CA8\u0CC1 \u0CAE\u0CBE\u0CA1\u0CB2\u0CC1 \u0CAC\u0CAF\u0CB8\u0CC1\u0CB5\u0CBF\u0CB0\u0CBF?' },
+      ta: { placeholder: '\u0B9A\u0BC6\u0BAF\u0BCD\u0BA4\u0BBF\u0BAF\u0BC8 \u0B8E\u0BB4\u0BC1\u0BA4\u0BC1\u0B99\u0BCD\u0B95\u0BB3\u0BCD...', send: '\u0B85\u0BA9\u0BC1\u0BAA\u0BCD\u0BAA\u0BC1', tools: '\u0B95\u0BB0\u0BC1\u0BB5\u0BBF\u0B95\u0BB3\u0BCD', listening: '\u0B95\u0BC7\u0B9F\u0BCD\u0B95\u0BBF\u0BB1\u0BC7\u0BA9\u0BCD...', back: '\u0BAA\u0BBF\u0BA9\u0BCD', close: '\u0BAE\u0BC2\u0B9F\u0BC1', language: '\u0BAE\u0BCA\u0BB4\u0BBF', privacy: '\u0B9A\u0BBF\u0BB1\u0BA8\u0BCD\u0BA4 \u0BAA\u0BA4\u0BBF\u0BB2\u0BCD\u0B95\u0BB3\u0BC1\u0B95\u0BCD\u0B95\u0BBE\u0B95 \u0B95\u0BB2\u0BCD\u0BB2\u0BC2\u0BB0\u0BBF \u0B8A\u0BB4\u0BBF\u0BAF\u0BB0\u0BCD\u0B95\u0BB3\u0BCD \u0B85\u0BB0\u0B9F\u0BCD\u0B9F\u0BC8\u0B95\u0BB3\u0BC8\u0BAA\u0BCD \u0BAA\u0BBE\u0BB0\u0BCD\u0B95\u0BCD\u0B95\u0BB2\u0BBE\u0BAE\u0BCD.', advisor: '\u0BB8\u0BCD\u0B9F\u0BCD\u0BB0\u0BC0\u0BAE\u0BCD \u0B86\u0BB2\u0BCB\u0B9A\u0B95\u0BB0\u0BCD', callback: '\u0B9A\u0BC7\u0BB0\u0BCD\u0B95\u0BCD\u0B95\u0BC8\u0B95\u0BCD \u0B95\u0BC1\u0BB4\u0BC1\u0BB5\u0BBF\u0B9F\u0BAE\u0BCD \u0BAA\u0BC7\u0B9A\u0BC1\u0B99\u0BCD\u0B95\u0BB3\u0BCD', visit: '\u0BB5\u0BB3\u0BBE\u0B95 \u0BB5\u0BB0\u0BC1\u0B95\u0BC8\u0BAF\u0BC8 \u0BAA\u0BA4\u0BBF\u0BB5\u0BC1 \u0B9A\u0BC6\u0BAF\u0BCD\u0BAF\u0BC1\u0B99\u0BCD\u0B95\u0BB3\u0BCD', documents: '\u0B86\u0BB5\u0BA3\u0BAA\u0BCD \u0BAA\u0B9F\u0BCD\u0B9F\u0BBF\u0BAF\u0BB2\u0BCD', careers: '\u0BA4\u0BCA\u0BB4\u0BBF\u0BB2\u0BCD \u0BB5\u0BB4\u0BBF\u0B95\u0BB3\u0BCD', events: '\u0BA8\u0BBF\u0B95\u0BB4\u0BCD\u0BB5\u0BC1\u0B95\u0BB3\u0BCD', wellness: '\u0BA8\u0BB2\u0BA9\u0BCD \u0B9A\u0BCB\u0BA4\u0BA9\u0BC8', student: '\u0BAE\u0BBE\u0BA3\u0BB5\u0BB0\u0BCD \u0BAE\u0BA3\u0BCD\u0B9F\u0BB2\u0BAE\u0BCD', welcome: '\u0BA8\u0BC0\u0B99\u0BCD\u0B95\u0BB3\u0BCD \u0B8E\u0BA9\u0BCD\u0BA9 \u0B9A\u0BC6\u0BAF\u0BCD\u0BAF \u0BB5\u0BBF\u0BB0\u0BC1\u0BAE\u0BCD\u0BAA\u0BC1\u0B95\u0BBF\u0BB1\u0BC0\u0BB0\u0BCD\u0B95\u0BB3\u0BCD?' },
+      ml: { placeholder: '\u0D38\u0D28\u0D4D\u0D26\u0D47\u0D36\u0D02 \u0D0E\u0D34\u0D41\u0D24\u0D41\u0D15...', send: '\u0D05\u0D2F\u0D2F\u0D4D\u0D15\u0D4D\u0D15\u0D41\u0D15', tools: '\u0D1F\u0D42\u0D33\u0D41\u0D15\u0D7E', listening: '\u0D15\u0D47\u0D7E\u0D15\u0D4D\u0D15\u0D41\u0D28\u0D4D\u0D28\u0D41...', back: '\u0D24\u0D3F\u0D30\u0D3F\u0D15\u0D46', close: '\u0D05\u0D1F\u0D2F\u0D4D\u0D15\u0D4D\u0D15\u0D41\u0D15', language: '\u0D2D\u0D3E\u0D37', privacy: '\u0D2E\u0D3F\u0D15\u0D1A\u0D4D\u0D1A \u0D09\u0D24\u0D4D\u0D24\u0D30\u0D19\u0D4D\u0D19\u0D7E\u0D15\u0D4D\u0D15\u0D3E\u0D2F\u0D3F \u0D15\u0D4B\u0D33\u0D47\u0D1C\u0D4D \u0D38\u0D4D\u0D31\u0D4D\u0D31\u0D3E\u0D2B\u0D3F\u0D28\u0D4D \u0D1A\u0D3E\u0D31\u0D4D\u0D31\u0D41\u0D15\u0D7E \u0D15\u0D3E\u0D23\u0D3E\u0D02.', advisor: '\u0D38\u0D4D\u0D1F\u0D4D\u0D30\u0D40\u0D02 \u0D09\u0D2A\u0D26\u0D47\u0D37\u0D4D\u0D1F\u0D3E\u0D35\u0D4D', callback: '\u0D2A\u0D4D\u0D30\u0D35\u0D47\u0D36\u0D28 \u0D1F\u0D40\u0D2E\u0D41\u0D2E\u0D3E\u0D2F\u0D3F \u0D38\u0D02\u0D38\u0D3E\u0D30\u0D3F\u0D15\u0D4D\u0D15\u0D41\u0D15', visit: '\u0D15\u0D4D\u0D2F\u0D3E\u0D2E\u0D4D\u0D2A\u0D38\u0D4D \u0D38\u0D28\u0D4D\u0D26\u0D7C\u0D36\u0D28\u0D02 \u0D2C\u0D41\u0D15\u0D4D\u0D15\u0D4D \u0D1A\u0D46\u0D2F\u0D4D\u0D2F\u0D41\u0D15', documents: '\u0D30\u0D47\u0D16\u0D15\u0D33\u0D41\u0D1F\u0D46 \u0D2A\u0D1F\u0D4D\u0D1F\u0D3F\u0D15', careers: '\u0D15\u0D30\u0D3F\u0D2F\u0D7C \u0D35\u0D34\u0D3F\u0D15\u0D7E', events: '\u0D2A\u0D30\u0D3F\u0D2A\u0D3E\u0D1F\u0D3F\u0D15\u0D7E', wellness: '\u0D15\u0D4D\u0D37\u0D47\u0D2E \u0D2A\u0D30\u0D3F\u0D36\u0D4B\u0D27\u0D28', student: '\u0D35\u0D3F\u0D26\u0D4D\u0D2F\u0D3E\u0D7C\u0D24\u0D4D\u0D25\u0D3F \u0D2E\u0D47\u0D16\u0D32', welcome: '\u0D28\u0D3F\u0D19\u0D4D\u0D19\u0D7E \u0D0E\u0D28\u0D4D\u0D24\u0D4D \u0D1A\u0D46\u0D2F\u0D4D\u0D2F\u0D3E\u0D7B \u0D06\u0D17\u0D4D\u0D30\u0D39\u0D3F\u0D15\u0D4D\u0D15\u0D41\u0D28\u0D4D\u0D28\u0D41?' },
+      te: { placeholder: '\u0C38\u0C02\u0C26\u0C47\u0C36\u0C02 \u0C30\u0C3E\u0C2F\u0C02\u0C21\u0C3F...', send: '\u0C2A\u0C02\u0C2A\u0C02\u0C21\u0C3F', tools: '\u0C38\u0C3E\u0C27\u0C28\u0C3E\u0C32\u0C41', listening: '\u0C35\u0C3F\u0C02\u0C1F\u0C41\u0C28\u0C4D\u0C28\u0C3E\u0C28\u0C41...', back: '\u0C35\u0C46\u0C28\u0C41\u0C15\u0C15\u0C41', close: '\u0C2E\u0C42\u0C38\u0C3F\u0C35\u0C47\u0C2F\u0C3F', language: '\u0C2D\u0C3E\u0C37', privacy: '\u0C2E\u0C46\u0C30\u0C41\u0C17\u0C48\u0C28 \u0C38\u0C2E\u0C3E\u0C27\u0C3E\u0C28\u0C3E\u0C32 \u0C15\u0C4B\u0C38\u0C02 \u0C15\u0C33\u0C3E\u0C36\u0C3E\u0C32 \u0C38\u0C3F\u0C2C\u0C4D\u0C2C\u0C02\u0C26\u0C3F \u0C1A\u0C3E\u0C1F\u0C4D\u200C\u0C32\u0C28\u0C41 \u0C1A\u0C42\u0C21\u0C35\u0C1A\u0C4D\u0C1A\u0C41.', advisor: '\u0C38\u0C4D\u0C1F\u0C4D\u0C30\u0C40\u0C2E\u0C4D \u0C38\u0C32\u0C39\u0C3E\u0C26\u0C3E\u0C30\u0C41', callback: '\u0C2A\u0C4D\u0C30\u0C35\u0C47\u0C36 \u0C2C\u0C43\u0C02\u0C26\u0C02\u0C24\u0C4B \u0C2E\u0C3E\u0C1F\u0C4D\u0C32\u0C3E\u0C21\u0C02\u0C21\u0C3F', visit: '\u0C15\u0C4D\u0C2F\u0C3E\u0C02\u0C2A\u0C38\u0C4D \u0C38\u0C02\u0C26\u0C30\u0C4D\u0C36\u0C28\u0C28\u0C41 \u0C2C\u0C41\u0C15\u0C4D \u0C1A\u0C47\u0C2F\u0C02\u0C21\u0C3F', documents: '\u0C2A\u0C24\u0C4D\u0C30\u0C3E\u0C32 \u0C1C\u0C3E\u0C2C\u0C3F\u0C24\u0C3E', careers: '\u0C15\u0C46\u0C30\u0C40\u0C30\u0C4D \u0C2E\u0C3E\u0C30\u0C4D\u0C17\u0C3E\u0C32\u0C41', events: '\u0C15\u0C3E\u0C30\u0C4D\u0C2F\u0C15\u0C4D\u0C30\u0C2E\u0C3E\u0C32\u0C41', wellness: '\u0C06\u0C30\u0C4B\u0C17\u0C4D\u0C2F \u0C24\u0C28\u0C3F\u0C16\u0C40', student: '\u0C35\u0C3F\u0C26\u0C4D\u0C2F\u0C3E\u0C30\u0C4D\u0C25\u0C3F \u0C1C\u0C4B\u0C28\u0C4D', welcome: '\u0C2E\u0C40\u0C30\u0C41 \u0C0F\u0C2E\u0C3F \u0C1A\u0C47\u0C2F\u0C3E\u0C32\u0C28\u0C41\u0C15\u0C41\u0C02\u0C1F\u0C41\u0C28\u0C4D\u0C28\u0C3E\u0C30\u0C41?' }
     };
 
     /* ============================================================================================
@@ -416,7 +416,7 @@
     bindText($.sendb, 'send', 'aria-label');
     $.comp = h('div', { class: 'nw-comp' }, $.tools, $.input, $.mic, $.sendb);
     $.privacy = h('span', {}); bindText($.privacy, 'privacy');
-    $.foot = h('div', { class: 'nw-foot' }, $.privacy, h('br'), '© 2026 ', h('a', { href: 'https://www.jonahbrowser.com', target: '_blank', rel: 'noopener noreferrer' }, 'CogniAI Studios'), '. All rights reserved.', h('span', { class: 'nw-ver', title: 'Noah widget ' + VERSION }, ' · build ' + VERSION.split('.').pop()));
+    $.foot = h('div', { class: 'nw-foot' }, $.privacy, h('br'), '\u00A9 2026 ', h('a', { href: 'https://www.jonahbrowser.com', target: '_blank', rel: 'noopener noreferrer' }, 'CogniAI Studios'), '. All rights reserved.', h('span', { class: 'nw-ver', title: 'Noah widget ' + VERSION }, ' \u00B7 build ' + VERSION.split('.').pop()));
     $.win = h('div', { class: 'nw-win', role: 'dialog', 'aria-label': 'Noah chat assistant' }, $.head, $.pop, $.morepop, $.body, $.comp, $.foot);
     var root = h('div', { class: 'nw', 'data-theme': 'light' }, $.teaser, $.win, $.fab);
     shadow.appendChild(root);
@@ -446,6 +446,7 @@
       if (!LANGS.some(function (l) { return l.code === code; })) return;
       S.lang = code; LS.set('noah_lang', code);
       binds.forEach(applyBind);
+      Array.prototype.forEach.call(shadow.querySelectorAll('[data-k]'), function (el) { el.textContent = T(el.getAttribute('data-k')); });   // tool tiles and open panel titles follow the language
       $.lang.lastChild.textContent = code.toUpperCase();
       document.documentElement.setAttribute('data-noah-lang', code);
       renderLangMenu(); setTheme(S.theme);
@@ -680,7 +681,7 @@
       TOOLS.forEach(function (t, i) {
         if ((t.id === 'wellness' && feat.wellness === false) || (t.id === 'student' && feat.student === false)) return;
         grid.appendChild(h('button', { class: 'nw-tile', style: '--hue:' + t.hue + ';animation-delay:' + (120 + i * 55) + 'ms', onclick: function () { openPanel(t.id); } },
-          h('span', { class: 'ti' }, icon(t.icon, 17)), h('b', {}, T(t.key)), h('small', {}, t.blurb)));
+          h('span', { class: 'ti' }, icon(t.icon, 17)), h('b', { 'data-k': t.key }, T(t.key)), h('small', {}, t.blurb)));
       });
       return grid;
     }
@@ -800,7 +801,7 @@
       hideSheet();
       var token = ++panelToken;
       var back = h('button', { class: 'nw-pb', 'aria-label': T('back'), onclick: closePanel }, icon('back', 17));
-      var title = h('b', {}, toolTitle(id));
+      var title = h('b', { 'data-k': (toolById(id) ? toolById(id).key : (id === 'compare' ? 'compare' : null)) }, toolTitle(id));
       var right = h('span', {});
       var body = h('div', { class: 'nw-pbody' });
       var foot = h('div');
@@ -931,7 +932,7 @@
           });
         }
         function showResults(res) {
-          var box = h('div', { class: 'nw-step' }, h('h3', { class: 'nw-q' }, 'Your best fits'), h('p', { class: 'nw-hint' }, 'Ranked from your answers. Tap a card’s buttons to take the next step.'));
+          var box = h('div', { class: 'nw-step' }, h('h3', { class: 'nw-q' }, 'Your best fits'), h('p', { class: 'nw-hint' }, 'Ranked from your answers. Tap a card\u2019s buttons to take the next step.'));
           if (res.admission_status) box.appendChild(h('div', { class: 'nw-alert' }, icon('info', 16), h('span', {}, res.admission_status)));
           res.results.forEach(function (r, k) {
             var circ = 2 * Math.PI * 26;
@@ -949,7 +950,7 @@
             r.reasons.forEach(function (t) { pills.appendChild(h('span', { class: 'nw-pill' }, t)); });
             r.warnings.forEach(function (t) { pills.appendChild(h('span', { class: 'nw-pill warn' }, t)); });
             box.appendChild(h('div', { class: 'nw-res' + (k === 0 ? ' best' : ''), style: 'animation-delay:' + (k * 120) + 'ms' }, ring,
-              h('div', {}, h('h4', {}, r.code + (k === 0 ? '  •  Best fit' : '')), h('small', {}, r.name), pills, h('p', { style: 'margin:8px 0 0;font-size:12.5px;color:var(--muted)' }, r.blurb + (r.process ? ' ' + r.process : '')),
+              h('div', {}, h('h4', {}, r.code + (k === 0 ? '  \u2022  Best fit' : '')), h('small', {}, r.name), pills, h('p', { style: 'margin:8px 0 0;font-size:12.5px;color:var(--muted)' }, r.blurb + (r.process ? ' ' + r.process : '')),
                 h('div', { class: 'nw-row2', style: 'margin-top:10px' }, h('button', { class: 'nw-btn sm', onclick: function () { openPanel('callback', { interest: INTEREST_OF[r.code] }); } }, icon('phone', 14), 'Talk to admissions'), h('button', { class: 'nw-btn ghost sm', onclick: function () { closePanel(); send('What are the subjects and fee for ' + r.code + '?'); } }, 'Ask Noah')))));
           });
           box.appendChild(h('div', { class: 'nw-note' }, res.disclaimer));
@@ -995,7 +996,7 @@
       var v = {}, state = { role: 'parent', board: '', interest: ctx.args.interest || 'not_sure', pref: 'any' };
       var form = h('form', { class: 'nw-step', novalidate: true, onsubmit: function (e) { e.preventDefault(); submit(); } });
       var note = h('textarea', { class: 'nw-f', maxlength: '300', placeholder: 'Anything you want us to know (optional)' });
-      put(form, h('h3', { class: 'nw-q' }, 'We’ll call you back'), h('p', { class: 'nw-hint' }, 'Leave your details and the admissions office will phone you during office hours (Mon-Fri, 8:30-4:30).'),
+      put(form, h('h3', { class: 'nw-q' }, 'We\u2019ll call you back'), h('p', { class: 'nw-hint' }, 'Leave your details and the admissions office will phone you during office hours (Mon-Fri, 8:30-4:30).'),
         field('I am a', segmented([{ id: 'parent', label: 'Parent' }, { id: 'student', label: 'Student' }], state.role, function (x) { state.role = x; })),
         field('Class 10 board', segmented(BOARD_OPTS, state.board, function (x) { state.board = x; })),
         field('Interested in', (function () { var s = h('select', { class: 'nw-f' }, INTERESTS.map(function (o) { return h('option', { value: o.id, selected: o.id === state.interest ? true : null }, o.label); })); s.onchange = function () { state.interest = s.value; }; return s; })()),
@@ -1063,7 +1064,7 @@
               downloadFile('cjc-campus-visit.ics', makeIcs([{ uid: 'visit-' + res.ref, date: res.date, start: res.time, end: end, title: 'Campus visit - Christ Junior College', desc: res.note + ' Reference ' + res.ref, location: res.place, alarms: [1440, 120] }]));
             } }, icon('download', 15), 'Add to calendar');
             var maps = h('a', { class: 'nw-btn ghost', href: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(res.place), target: '_blank', rel: 'noopener noreferrer' }, icon('pin', 15), 'Directions');
-            clear(ctx.body).appendChild(successView('You’re booked', res.ref, [when, res.place, res.note], h('div', { class: 'nw-row2' }, cal, maps)));
+            clear(ctx.body).appendChild(successView('You\u2019re booked', res.ref, [when, res.place, res.note], h('div', { class: 'nw-row2' }, cal, maps)));
           });
         }
       }
@@ -1386,7 +1387,7 @@
 
       /* -- quiz + flashcards -- */
       function studyForm(kind) {
-        var subj = h('select', { class: 'nw-f' }), topic = h('input', { class: 'nw-f', maxlength: '120', placeholder: kind === 'quiz' ? 'For example: Newton’s laws of motion' : 'For example: Periodic table trends' });
+        var subj = h('select', { class: 'nw-f' }), topic = h('input', { class: 'nw-f', maxlength: '120', placeholder: kind === 'quiz' ? 'For example: Newton\u2019s laws of motion' : 'For example: Periodic table trends' });
         var diff = 'medium', count = kind === 'quiz' ? 5 : 8;
         var go = h('button', { class: 'nw-btn block', style: 'margin-top:6px', onclick: generate }, icon('star', 15), kind === 'quiz' ? 'Make my quiz' : 'Make my flashcards');
         put(pane, h('div', { class: 'nw-field' }, h('label', {}, 'Subject'), subj), field('Topic', topic),
@@ -1423,7 +1424,7 @@
             } }, String.fromCharCode(65 + k) + '.  ' + o);
             opts.appendChild(b);
           });
-          clear(box).appendChild(h('div', { class: 'nw-step' }, h('div', { class: 'nw-qhead' }, h('span', {}, q.subject + ' • ' + q.topic), h('b', {}, (i + 1) + '/' + q.questions.length)),
+          clear(box).appendChild(h('div', { class: 'nw-step' }, h('div', { class: 'nw-qhead' }, h('span', {}, q.subject + ' \u2022 ' + q.topic), h('b', {}, (i + 1) + '/' + q.questions.length)),
             h('div', { class: 'nw-prog' }, q.questions.map(function (_, k) { return h('i', { class: k <= i ? 'on' : '' }); })), h('h3', { class: 'nw-q' }, item.q), opts, why, nextBtn));
         }
         function end() {
@@ -1446,7 +1447,7 @@
           var c = deck.cards[i];
           var card = h('div', { class: 'nw-fc', tabindex: '0', role: 'button', 'aria-label': 'Flip card', onclick: function () { card.classList.toggle('flip'); }, onkeydown: function (e) { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); card.classList.toggle('flip'); } } },
             h('div', {}, h('div', { class: 'f' }, c.front, h('small', {}, 'Tap to flip')), h('div', { class: 'b' }, c.back)));
-          clear(box).appendChild(h('div', { class: 'nw-step' }, h('div', { class: 'nw-qhead' }, h('span', {}, deck.subject + ' • ' + deck.topic), h('b', {}, (i + 1) + '/' + deck.cards.length)), card,
+          clear(box).appendChild(h('div', { class: 'nw-step' }, h('div', { class: 'nw-qhead' }, h('span', {}, deck.subject + ' \u2022 ' + deck.topic), h('b', {}, (i + 1) + '/' + deck.cards.length)), card,
             h('div', { class: 'nw-row2' }, h('button', { class: 'nw-btn ghost', onclick: function () { deck.cards.push(c); i++; show(); } }, 'Again later'), h('button', { class: 'nw-btn', onclick: function () { known++; i++; show(); } }, icon('check', 15), 'Got it'))));
         }
         function summary() {
@@ -1569,8 +1570,8 @@
               var nt = h('input', { class: 'nw-f', style: 'min-height:34px;padding:6px 10px;margin-top:6px', placeholder: 'Staff note', value: x.staff_note || '', maxlength: '500' });
               nt.onchange = function () { mutate('PATCH', '/api/staff/leads/' + x.id, { staff_note: nt.value }, function () { toast('Note saved'); }); };
               list.appendChild(h('div', { class: 'nw-lead' }, h('header', {}, h('b', {}, x.name + ' '), h('span', { class: 'nw-pill brand' }, x.kind), st),
-                h('div', {}, h('a', { href: 'tel:' + x.phone }, x.phone), x.email ? [' • ', h('a', { href: 'mailto:' + x.email }, x.email)] : null),
-                h('small', { style: 'color:var(--muted)' }, [x.role, x.board, x.interest, x.slot_date ? 'Visit ' + x.slot_date + ' ' + x.slot_time : '', x.pref_time ? 'Call ' + x.pref_time : '', (x.ts || '').slice(0, 16).replace('T', ' ')].filter(Boolean).join(' • ')), x.note ? h('div', { style: 'font-size:12.5px;margin-top:4px' }, x.note) : null, nt));
+                h('div', {}, h('a', { href: 'tel:' + x.phone }, x.phone), x.email ? [' \u2022 ', h('a', { href: 'mailto:' + x.email }, x.email)] : null),
+                h('small', { style: 'color:var(--muted)' }, [x.role, x.board, x.interest, x.slot_date ? 'Visit ' + x.slot_date + ' ' + x.slot_time : '', x.pref_time ? 'Call ' + x.pref_time : '', (x.ts || '').slice(0, 16).replace('T', ' ')].filter(Boolean).join(' \u2022 ')), x.note ? h('div', { style: 'font-size:12.5px;margin-top:4px' }, x.note) : null, nt));
             });
           });
         }
@@ -1586,7 +1587,7 @@
             clear(listBox);
             (r.data.codes || []).forEach(function (c) {
               listBox.appendChild(h('div', { class: 'nw-lead' }, h('header', {}, h('b', {}, c.label), h('span', { class: 'nw-pill ' + (c.active ? 'ok' : 'bad') }, c.active ? 'active' : 'revoked')),
-                h('small', { style: 'color:var(--muted)' }, 'ends ...' + c.hint + ' • used ' + c.uses + 'x • expires ' + (c.expires_ts || 'never').slice(0, 10)),
+                h('small', { style: 'color:var(--muted)' }, 'ends ...' + c.hint + ' \u2022 used ' + c.uses + 'x \u2022 expires ' + (c.expires_ts || 'never').slice(0, 10)),
                 c.active ? h('div', { style: 'margin-top:6px' }, h('button', { class: 'nw-btn danger sm', onclick: function () { mutate('DELETE', '/api/staff/student-codes/' + c.id, undefined, drawList); } }, 'Revoke')) : null));
             });
             if (!(r.data.codes || []).length) listBox.appendChild(h('div', { class: 'nw-note' }, 'No codes yet.'));
@@ -1617,7 +1618,7 @@
             put(clear(form), h('b', {}, e.id ? 'Edit ' + e.title : 'Add an event'), h('div', { style: 'height:8px' }), field('Title', inp('title', 'Title')), field('Description', inp('blurb', 'One or two sentences')),
               h('div', { class: 'nw-row2', style: 'margin:0' }, field('Starts', f.sdate), field('Time (optional)', f.stime), field('Ends', f.edate)), field('Where', inp('location', 'Location')), field('Link label', inp('link_label', 'Register')), field('Link (https://)', inp('link_url', 'https://')), field('Contact', inp('contact', 'Email or phone')), field('Tag', f.tag),
               h('label', { class: 'nw-check' }, f.active, h('span', {}, 'Visible to visitors')),
-              h('label', { class: 'nw-check' }, f.over, h('span', {}, 'This year’s edition is over')),
+              h('label', { class: 'nw-check' }, f.over, h('span', {}, 'This year\u2019s edition is over')),
               h('div', { class: 'nw-row2' }, h('button', { class: 'nw-btn', onclick: function () {
                 var body = { id: e.id, title: f.title.value, blurb: f.blurb.value, starts: f.sdate.value ? f.sdate.value + (f.stime.value ? 'T' + f.stime.value : '') : '', ends: f.edate.value, location: f.location.value, link_label: f.link_label.value, link_url: f.link_url.value, contact: f.contact.value, tag: f.tag.value, active: f.active.checked, over: f.over.checked, sort: e.sort || 50 };
                 mutate('POST', '/api/staff/events', body, function () { toast('Saved'); draw(); });
