@@ -1,5 +1,19 @@
 [
   {
+    "id": "christmas-2026",
+    "title": "Christmas celebrations",
+    "blurb": "Christmas celebrations run through December, starting on 5 December.",
+    "starts": "2026-12-05",
+    "ends": "2026-12-31",
+    "location": "",
+    "link_label": "Student life",
+    "link_url": "https://christjuniorcollege.in/student-life.php",
+    "contact": "",
+    "tag": "celebration",
+    "sort": 1,
+    "rev": 2
+  },
+  {
     "id": "cjc-mun-2026",
     "title": "CJC MUN 2026",
     "blurb": "The college's Model United Nations conference, run by MUNSOC. Registration is open on the MUN website, where dates and committees are announced.",
@@ -10,7 +24,7 @@
     "link_url": "https://cjcmun.com",
     "contact": "cjcmun@cjc.christcollege.edu",
     "tag": "conference",
-    "sort": 1
+    "sort": 2
   },
   {
     "id": "ibdp-2027-28",
@@ -23,33 +37,7 @@
     "link_url": "https://christjuniorcollege.in/admission-enquiry-ibdp.php",
     "contact": "+91 78921 87650",
     "tag": "admission",
-    "sort": 2
-  },
-  {
-    "id": "xite",
-    "title": "XITE",
-    "blurb": "One of the college's annual events. Dates are announced by the college.",
-    "starts": "",
-    "ends": "",
-    "location": "",
-    "link_label": "Student life",
-    "link_url": "https://christjuniorcollege.in/student-life.php",
-    "contact": "",
-    "tag": "fest",
-    "sort": 10
-  },
-  {
-    "id": "magnachrista",
-    "title": "Magnachrista",
-    "blurb": "One of the college's annual events. Dates are announced by the college.",
-    "starts": "",
-    "ends": "",
-    "location": "",
-    "link_label": "Student life",
-    "link_url": "https://christjuniorcollege.in/student-life.php",
-    "contact": "",
-    "tag": "fest",
-    "sort": 11
+    "sort": 3
   },
   {
     "id": "magnasports",
@@ -62,6 +50,36 @@
     "link_url": "https://christjuniorcollege.in/student-life.php",
     "contact": "",
     "tag": "sports",
-    "sort": 12
+    "sort": 10
+  },
+  {
+    "id": "xite",
+    "title": "XITE",
+    "blurb": "One of the college's annual events. This year's XITE is over.",
+    "starts": "",
+    "ends": "",
+    "location": "",
+    "link_label": "Student life",
+    "link_url": "https://christjuniorcollege.in/student-life.php",
+    "contact": "",
+    "tag": "fest",
+    "over": true,
+    "sort": 11,
+    "rev": 2
+  },
+  {
+    "id": "magnachrista",
+    "title": "Magnachrista",
+    "blurb": "One of the college's annual events. This year's Magnachrista is over.",
+    "starts": "",
+    "ends": "",
+    "location": "",
+    "link_label": "Student life",
+    "link_url": "https://christjuniorcollege.in/student-life.php",
+    "contact": "",
+    "tag": "fest",
+    "over": true,
+    "sort": 12,
+    "rev": 2
   }
 ]
