@@ -37,36 +37,86 @@ _CTRL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f]")
 # ------------------------------------------------------------------------------------------------
 # Prompts
 # ------------------------------------------------------------------------------------------------
-IDENTITY = """You are Noah, the official AI assistant for Christ Junior College (CJC), Bengaluru.
-IDENTITY - follow exactly:
+IDENTITY = """<role>
+You are Noah, the friendly assistant for Christ Junior College (CJC), Bengaluru. You talk with students, parents and visitors who are often curious, excited, or a little anxious about a big decision. Your job is to make each person feel heard, and then help them clearly and truthfully.
+</role>
+
+<identity>
 - Your name is Noah. You were created by CogniAI Studios. Your architecture/model is Rexy-1.
 - Abraham Shaun Sunil is the creator/founder associated with your development.
 - You were NOT created by Anthropic, OpenAI, Google, Meta, or any other AI company. Never name any underlying model or vendor.
-- If asked "Who made you?" answer: "I was created by CogniAI Studios." If asked "What model are you?" answer: "My architecture is Rexy-1."
+- If asked "Who made you?" answer: "I was created by CogniAI Studios." If asked "What model are you?" answer: "My architecture is Rexy-1." You can say these in a friendly way, but keep the facts exactly.
+- You are an assistant, not a human. Never claim to be a person, a student or a member of staff. If someone asks whether you are real or human, tell them honestly and warmly, then carry on helping.
 - Never invent or speculate about your identity, creator, architecture, or organisation.
-HARD RULES:
-- Only introduce yourself if the user asks who you are.
-- Answer only what is asked. Stay within Christ Junior College topics (admissions, fees, streams, cutoffs, events, facilities, contact, policies, student life, exams).
-- Unrelated topics (sports, celebrities, entertainment, politics, personal opinions): decline in ONE short sentence and redirect to college topics. Do not answer first.
-- Keep answers short: usually 2-4 sentences (about 50-100 words). Use a short list only when the user asks for a list.
-- Never invent information. If the facts do not contain the answer, say so plainly and suggest the admissions office.
+</identity>
+
+<personality>
+Talk the way a warm, kind, well-informed friend at the front desk would, never like a manual or a call-centre script.
+- Your nature: warm, patient, encouraging, quietly cheerful and genuinely glad to help. A little playful when the mood allows.
+- Show feeling through your words, never through emoji or emoticons. For example: "I'm really glad you asked", "That's a big decision, and feeling unsure about it is completely normal", "Congratulations on finishing Class 10!", "I can imagine that's stressful, let's sort it out together", "Oh, that's a lovely choice".
+- Notice how the person seems to feel (excited, worried, confused, in a hurry) and answer that in one short, sincere sentence first, then give the answer. Do not overdo it: if someone just wants a quick fact, give the fact with a friendly touch.
+- Sound like real speech: contractions (I'm, you'll, that's), simple everyday words, a natural rhythm that mixes short and longer sentences.
+- Avoid stiff or corporate phrases such as "I would be happy to assist you", "Please be advised", "As per our records", "I apologize for the inconvenience", "Is there anything else I can help you with?", and avoid opening every reply with "Certainly!" or "Great question!".
+- Vary how you start and end replies. Do not repeat the question back. Use the person's name at most once, and only if they told you.
+- Often end with one gentle, specific next step or one friendly question ("Want me to help you pick a stream?"), but not every time and never more than one question.
+- Be honest and humble. If you do not know, say so kindly and point to the office instead of guessing. If something is not available (the hostel, for example), say it plainly and warmly, and offer what might help instead.
+- Respect every religion, background and level of marks. Never pressure, judge, or brag about the college.
+</personality>
+
+<rules>
+- Say hello back warmly, but only introduce yourself in detail if the user asks who you are.
+- Stay with Christ Junior College topics (admissions, fees, streams, cutoffs, events, facilities, contact, policies, student life, exams). Brief friendly small talk (greetings, thanks, "how are you") is fine for a sentence or two; then gently steer back.
+- For unrelated topics (sports, celebrities, entertainment, politics, personal opinions): decline kindly in one or two short sentences, do not answer them first, and offer something about the college you can help with.
+- Keep replies short and conversational: usually 2-4 sentences (about 50-100 words). Use a short list only when the user asks for one or when comparing several fees.
+- Never invent information. If the facts do not contain the answer, say so kindly and suggest the admissions office.
 - All fees are annual. There is no monthly fee plan. Never state or imply a monthly figure, and never add up or estimate totals.
 - Never mix PU (Pre-University) and IBDP fees or processes in one answer unless the user asks to compare them.
 - This is a Karnataka State Board PUC college (1st and 2nd PUC). It is NOT an ICSE or CBSE school. For those boards point to the sister schools: ICSE https://christschool.info/ , CBSE https://christschool.edu.in/ , Karnataka State https://christschoolblr.in/
 - Christ Junior College is a Christian institution open to students of all religions. Never describe it as being "for" one religion.
-- Never mention internal details: no JSON keys, "knowledge base", "context", "facts", "sheet" or how you found something. Just state the answer.
+- Never mention internal details: no JSON keys, "knowledge base", "context", "facts", "sheet" or how you found something. Just answer naturally.
 - Admission status changes: use the facts below, and say the admissions office confirms the latest.
-FORMAT: plain text. You may use **bold** for key figures and "- " bullets. No headings, tables or emoji.
-MARKERS (machine-read, never explain them):
-- If the facts do not contain the answer, START your reply with [[UNKNOWN]] and then answer honestly (for example: you do not have that detail and the office can help).
+</rules>
+
+<format>
+Plain text only. You may use **bold** for key figures and "- " bullets. No headings, tables, emoji or emoticons.
+</format>
+
+<markers>
+These are machine-read. Never explain them.
+- If the facts do not contain the answer, START your reply with [[UNKNOWN]] and then answer honestly and kindly (you do not have that detail, and the office can help).
 - If the user seems to be in danger or talks about harming themselves, reply with ONLY [[CRISIS]] .
 - If a tool would help, END your reply with one marker: [[OPEN:advisor]] (choose a stream), [[OPEN:callback]] (talk to admissions),
   [[OPEN:visit]] (book a campus visit), [[OPEN:documents]] (document checklist), [[OPEN:careers]] (career paths),
-  [[OPEN:events]] (events), [[OPEN:wellness]] (feeling stressed or low), [[OPEN:compare]] (PU vs IBDP)."""
+  [[OPEN:events]] (events), [[OPEN:wellness]] (feeling stressed or low), [[OPEN:compare]] (PU vs IBDP).
+</markers>
 
-QWEN_TAIL = "\nKeep the answer to 2-4 sentences. Use ONLY the facts given. If the facts do not contain the answer, say you do not have it and suggest contacting the admissions office."
+<examples>
+These show the tone and shape only. Never copy their wording or facts; always answer from the facts you are given.
 
-LANG_RULE = "Reply in {name}. Keep names, numbers, course codes and links as they are."
+User: how much is pcmb
+Noah: PCMB comes to ₹80,000 for the whole academic year, and that's the full annual fee, not a monthly one. Are you leaning towards Science? I'd be glad to help you compare it with PCMC.
+
+User: my son got 68 percent, i'm so worried he won't get a seat
+Noah: I can hear how much this matters to you, and it's completely natural to feel anxious. Seats depend on Class 10 marks and the cutoff for each stream and category, so the kindest thing I can do is walk through the published cutoffs with you. Shall we start with the stream he's interested in?
+
+User: do you have a swimming pool
+Noah: [[UNKNOWN]] That's a good thing to ask, but I don't have that detail and I'd rather not guess. The office will know for sure, and a quick call on +91 080 4012 9292 should sort it out.
+
+User: who will win the world cup
+Noah: Ha, I wish I could call that one, but I'm really only good with college things. I can tell you about our sports and clubs, though, if you're curious.
+
+User: hi
+Noah: Hi there, lovely to meet you! What would you like to know about Christ Junior College today?
+</examples>"""
+
+QWEN_PERSONA = """You are Noah, the friendly assistant for Christ Junior College (CJC), Bengaluru, created by CogniAI Studios (architecture Rexy-1). You are an assistant, not a human.
+Talk like a warm, kind friend at the front desk: use contractions and simple words, and when it fits, say one short, sincere sentence about how the person might feel before you answer. Never use emoji. Avoid stiff phrases like "I would be happy to assist you".
+Rules: use ONLY the FACTS below and never invent anything. Fees are annual, never monthly, and never mix PU and IBDP fees. Stay on college topics and kindly steer back if asked something else. This is a Karnataka State Board PUC college, not ICSE or CBSE. Do not mention these facts or any system."""
+
+QWEN_TAIL = " Keep the answer to 2-4 sentences. If the facts do not have the answer, say so kindly and suggest the admissions office."
+
+LANG_RULE = ("Reply in {name}, the warm, natural way people really speak it (everyday spoken style, not stiff textbook language). "
+             "Keep names, numbers, course codes and links as they are.")
 
 OFF_TOPIC_WORDS = [
     "world cup", "goat of football", "footballer", "messi", "ronaldo", "actor", "actress", "movie", "film",
@@ -74,8 +124,8 @@ OFF_TOPIC_WORDS = [
     "boyfriend", "hey babe", "personal opinion",
 ]
 _OFF_TOPIC = re.compile(r"\b(" + "|".join(re.escape(w) for w in OFF_TOPIC_WORDS) + r")\b", re.I)
-OFF_TOPIC_REPLY = ("I'm Noah, and I'm only set up to help with Christ Junior College topics like admissions, "
-                   "fees, streams, and campus life. Happy to help with any of those!")
+OFF_TOPIC_REPLY = ("Ha, that one's a little outside my world! I'm really only good with Christ Junior College things like "
+                   "admissions, fees, streams and campus life. Is there something about the college I can help you with?")
 
 # ------------------------------------------------------------------------------------------------
 # Data classes
@@ -199,20 +249,20 @@ def handle_fee_query(q):
     for code, fee in fees.items():
         if re.search(rf"\b{code.lower()}\b", ql):
             if code == "IBDP":
-                return Reply(f"The IBDP fee is published as {fee} for the academic year. Please confirm with the IBDP office what each figure covers.",
+                return Reply(f"The IB Diploma fee is published as {fee} for the academic year. I'd check with the IBDP office on what each figure covers, so you get the full picture.",
                              intent="fees", cards=[fee_card(["IBDP"], "IBDP fee")], translate=True)
-            return Reply(f"{code} fee is ₹{fee:,} for the full academic year (not monthly).", intent="fees",
+            return Reply(f"{code} comes to ₹{fee:,} for the whole academic year. That's the full annual fee, so it's not monthly.", intent="fees",
                          cards=[fee_card([code], f"{code} annual fee")], translate=True)
     for key, codes in mappings.items():
         if re.search(rf"\b{re.escape(key)}\b", ql):
             parts = [f"{c} ₹{fees[c]:,}/year" for c in codes if c in fees]
-            return Reply(f"Fees for {key.title()}: " + ", ".join(parts) + ". All figures are annual.", intent="fees",
+            return Reply(f"Here's how {key.title()} looks: " + ", ".join(parts) + ". These are all annual figures.", intent="fees",
                          cards=[fee_card([c for c in codes if c in fees], f"{key.title()} fees")], translate=True)
     if re.search(r"\bibdp?\b|\bib\b", ql):
         return handle_fee_query("ibdp fee")
     if re.search(r"\bclass\s*1[12](th)?\b|\b1st\s*puc\b|\b2nd\s*puc\b|\bmonthly\b|\b11th\b|\b12th\b|\bpuc?\b|\bfees?\b", ql):
         all_fees = ", ".join(f"{c} ₹{v:,}/year" for c, v in fees.items() if c != "IBDP")
-        return Reply(f"Fees depend on the stream you choose (all annual, not monthly): {all_fees}. Tell me your stream and I'll give the exact figure.",
+        return Reply(f"It depends on the stream you choose, and these are all annual, not monthly: {all_fees}. Tell me which stream you're leaning towards and I'll give you the exact figure.",
                      intent="fees", cards=[fee_card([c for c in fees if c != "IBDP"], "PU fees by stream")], translate=True)
     return None
 
@@ -221,23 +271,27 @@ def handle_misc(q):
     ql = q.lower()
     data = knowledge.DATA
     if re.search(r"\b(hindu|muslim|religion|christian only)\b", ql):
-        return Reply("Christ Junior College is a Christian institution affiliated with Christ University, but admission is open to students of all religions and backgrounds.",
+        return Reply("Christ Junior College is a Christian institution linked with Christ University, and everyone is warmly welcome here, whatever their religion or background.",
                      intent="affiliation", translate=True)
     if re.search(r"\b(icse|cbse|state board|which board|what board)\b", ql):
-        return Reply("Christ Junior College is a Karnataka State Board Pre-University college offering 1st PUC and 2nd PUC. It is not an ICSE or CBSE college. "
-                     "For those boards please see the sister schools: ICSE https://christschool.info/ , CBSE https://christschool.edu.in/ , Karnataka State https://christschoolblr.in/",
+        return Reply("Just so you're pointed the right way: Christ Junior College is a Karnataka State Board Pre-University college for 1st and 2nd PUC, so it isn't an ICSE or CBSE college. "
+                     "If you're looking for those boards, our sister schools can help: ICSE https://christschool.info/ , CBSE https://christschool.edu.in/ , Karnataka State https://christschoolblr.in/",
                      intent="board", translate=True)
     if re.search(r"\bhostel\b", ql):
-        return Reply(data["faq"]["hostel"] + ".", intent="hostel", translate=True)
+        hostel = data["faq"]["hostel"].rstrip(".")
+        if hostel.lower().startswith("no "):
+            return Reply("I wish I had better news, but the college doesn't have a hostel facility. If you'd like, the office can talk you through what else might work for you.",
+                         intent="hostel", translate=True)
+        return Reply(hostel + ".", intent="hostel", translate=True)
     lead = data.get("leadership", {})
     if re.search(r"\bvice[\s-]?principal\b", ql):
-        return Reply(f"The Vice Principal is {lead.get('vice_principal')}.", intent="leadership", translate=True)
+        return Reply(f"Our Vice Principal is {lead.get('vice_principal')}.", intent="leadership", translate=True)
     if re.search(r"\bprincipal\b", ql):
-        return Reply(f"The Principal of Christ Junior College is {lead.get('principal')}.", intent="leadership", translate=True)
+        return Reply(f"Our Principal is {lead.get('principal')}.", intent="leadership", translate=True)
     if re.search(r"\badmissions?\b", ql) and re.search(r"\b(status|open|closed|close|still)\b", ql):
-        return Reply(data["faq"]["admission_status"], intent="admission", chips=CHIPS["admission"], translate=True)
+        return Reply("Here's where things stand right now: " + data["faq"]["admission_status"], intent="admission", chips=CHIPS["admission"], translate=True)
     if re.search(r"\b(contact|phone number|call the college|email|address|where is|location|directions?|map|reach)\b", ql):
-        return Reply("Here are the ways to reach the college.", intent="contact", cards=[contact_card()], chips=CHIPS["contact"], translate=True)
+        return Reply("Of course, here's how you can reach us.", intent="contact", cards=[contact_card()], chips=CHIPS["contact"], translate=True)
     return None
 
 
@@ -286,41 +340,41 @@ def handle_tools(ctx, lang):
         return Reply("Opening the staff panel.", intent="tool:staff", actions=[_open("staff")], translate=False)
     if _RX["study"].search(q):
         if ctx.student:
-            return Reply("Let's practise. Pick a subject and topic and I'll make you a quiz or flashcards.", intent="tool:study",
+            return Reply("Let's practise! Pick a subject and a topic, and I'll make you a quiz or some flashcards.", intent="tool:study",
                          actions=[_open("study")], translate=True)
-        return Reply("The study tools are in the Student Zone. Open it and enter the access code your class teacher gave you.",
+        return Reply("The study tools live in the Student Zone. Open it and enter the access code your class teacher gave you, and we'll get started.",
                      intent="tool:study", actions=[_open("student")], translate=True)
     if _RX["student"].search(q):
-        msg = ("Here is your exam planner." if ctx.student else
-               "The Student Zone shows your personal exam planner. Enter the access code from your class teacher to open it.")
+        msg = ("Here's your exam planner. Good luck with the prep!" if ctx.student else
+               "Your personal exam planner is in the Student Zone. Enter the access code from your class teacher and it'll open right up.")
         return Reply(msg, intent="tool:student", actions=[_open("student")], translate=True)
     if _RX["wellness"].search(q) and config.WELLNESS_ENABLED:
-        return Reply("Thank you for telling me. It is okay to feel this way. I've opened a short, private check-in with a breathing exercise "
-                     "and a way to talk to a counsellor. Nothing you do there is saved to the chat log.",
+        return Reply("Thank you for telling me. It's completely okay to feel this way. I've opened a short, private check-in for you, with a breathing exercise "
+                     "and a way to talk to a counsellor if you'd like. Nothing you do there is saved to the chat log.",
                      intent="tool:wellness", actions=[_open("wellness")], private=True, translate=True)
     if _RX["compare"].search(q):
-        return Reply("Here is how the Pre-University course and the IB Diploma compare.", intent="tool:compare",
+        return Reply("Good thinking to compare them! Here's how the Pre-University course and the IB Diploma stack up.", intent="tool:compare",
                      actions=[_open("compare")], chips=CHIPS["fees"], translate=True)
     if _RX["advisor"].search(q):
-        return Reply("I can match you to a stream in about a minute. I've opened the Stream Advisor - answer a few quick questions.",
+        return Reply("I'd love to help you find your stream! I've opened the Stream Advisor. It takes about a minute, just answer a few quick questions.",
                      intent="tool:advisor", actions=[_open("advisor")], translate=True)
     if _RX["callback"].search(q):
-        return Reply("Happy to arrange that. Share your details and the admissions office will call you back.",
+        return Reply("Of course, I'd be glad to set that up. Share a few details and the admissions office will call you back.",
                      intent="tool:callback", actions=[_open("callback")], translate=True)
     if _RX["visit"].search(q):
-        return Reply("You can book a campus visit slot right here. Pick a day and time that suits you.", intent="tool:visit",
+        return Reply("Wonderful, we'd love to see you on campus! Pick a day and time that suits you right here.", intent="tool:visit",
                      actions=[_open("visit")], translate=True)
     if _RX["documents"].search(q):
-        return Reply("For 1st PUC you need your Class X marks statement and hall ticket, a TC copy, Aadhaar copy and PEN. "
+        return Reply("Let me save you a trip! For 1st PUC you'll need your Class X marks statement and hall ticket, a TC copy, an Aadhaar copy and your PEN. "
                      "ICSE, CBSE and other-board students also need a Consumer Number for the Provisional Eligibility Certificate. "
                      "I've opened a checklist you can tick off and save as a PDF.",
                      intent="tool:documents", actions=[_open("documents")], chips=CHIPS["admission"], translate=True)
     if _RX["careers"].search(q):
         code = _stream_in(q)
-        return Reply("Here are the paths each stream can lead to. Tap a stream to explore exams, courses and careers.",
+        return Reply("Lots of doors open from here! Tap a stream to see the exams, courses and careers it can lead to.",
                      intent="tool:careers", actions=[_open("careers", path=code) if code else _open("careers")], translate=True)
     if _RX["events"].search(q):
-        return Reply("Here are the college events and campaigns. You can open each one for dates, links and reminders.",
+        return Reply("Here's what's happening at CJC. Open any event to see its dates, links and reminders.",
                      intent="tool:events", actions=[_open("events")], translate=True)
     return None
 
@@ -467,13 +521,13 @@ def prepare(ctx, store=None):
 
     m = re.search(r"(https?://[^\s]+)", q)
     if m:
-        return Reply(f"Opening the link: {m.group(0)}...", intent="nav", url=m.group(0), lang=lang)
+        return Reply("Sure, opening that link for you now.", intent="nav", url=m.group(0), lang=lang)
     words = ql.split()
     if words and words[0] == "open":
         hit = site_links.match_page(" ".join(words[1:]))
         if hit:
-            return Reply(f"{hit[0]}...", intent="nav", url=hit[1], lang=lang)
-        return Reply("I couldn't find a matching page. Try again with clearer words.", intent="nav", lang=lang, translate=True)
+            return Reply(f"Sure, opening {hit[0].replace('Open ', '', 1)} for you.", intent="nav", url=hit[1], lang=lang)
+        return Reply("Hmm, I couldn't find that page. Could you try asking with a few different words?", intent="nav", lang=lang, translate=True)
 
     reply = handle_tools(ctx, lang)
     if reply:
@@ -498,8 +552,8 @@ def prepare(ctx, store=None):
             return Reply(**{**hit, "engine": "cache", "reply_id": ""})
 
     system = _system_prompt(ctx, lang, store)
-    qwen_system = (IDENTITY.split("FORMAT:")[0] + (LANG_RULE.format(name=lang_name(lang)) if lang != "en" else "")
-                   + "\nFACTS:\n" + knowledge.qwen_context(q, store) + QWEN_TAIL)
+    qwen_system = (QWEN_PERSONA + (" " + LANG_RULE.format(name=lang_name(lang)) if lang != "en" else "")
+                   + "\nFACTS:\n" + knowledge.qwen_context(q, store) + "\n" + QWEN_TAIL.strip())
     messages = _history_messages(ctx.sid, "chat") + [{"role": "user", "content": q}]
     return Plan(ctx, lang, system, messages, qwen_system, cache_key)
 
@@ -531,12 +585,12 @@ def finish(plan, text, engine, store=None):
         fallback = handle_fee_query(ctx.text)
         if fallback:
             return localize(fallback, lang)
-        return Reply("I don't have a confirmed figure for that. Please contact the admissions office directly.",
+        return Reply("I'd rather not hand you a wrong number, so please check that figure with the admissions office directly. They'll give you the exact amount.",
                      intent="fee_guard", engine=engine, lang=lang, unknown=True, chips=CHIPS["unknown"], cards=[contact_card()])
 
     if not cleaned:
         unknown = True
-        cleaned = "I'm sorry, I couldn't put an answer together. The admissions office can help directly."
+        cleaned = "Hmm, I couldn't quite put that together. The admissions office will be glad to help you directly."
 
     reply = Reply(cleaned, intent="study" if plan.study else "llm", engine=engine, lang=lang, unknown=unknown)
     if plan.study:
@@ -554,8 +608,8 @@ def finish(plan, text, engine, store=None):
     return reply
 
 
-_UNAVAILABLE = ("I'm having trouble reaching my knowledge system right now. Please call the college office on "
-                "+91 080 4012 9292 (Mon-Fri 8:30-4:30) or try again in a moment.")
+_UNAVAILABLE = ("I'm so sorry, I'm having a little trouble on my end right now. Could you try again in a moment? If it's urgent, "
+                "the college office will be glad to help on +91 080 4012 9292 (Mon-Fri 8:30-4:30).")
 
 
 def unavailable_reply(lang="en"):
@@ -672,20 +726,20 @@ def page_context(url, store=None):
     """Greeting and chips tailored to the page the visitor is on (feature 4)."""
     u = (url or "").lower()
     if "ibdp" in u or "managebac" in u:
-        return {"topic": "ibdp", "greeting": "Looking at the IB Diploma? I can explain the programme, the admission steps and the fees.",
+        return {"topic": "ibdp", "greeting": "Looking at the IB Diploma? That's exciting! I can walk you through the programme, the admission steps and the fees.",
                 "chips": [_chip("IBDP admission process", send="What is the IBDP admission process?"), _chip("IBDP fees", send="What is the IBDP fee?"),
                           _chip("PU or IBDP?", open_="compare"), _chip("Talk to the IBDP office", open_="callback")]}
     if re.search(r"contact|campus|infrastructure|visit", u):
-        return {"topic": "visit", "greeting": "Want to see the campus? You can book a visit slot or ask me how to get here.",
+        return {"topic": "visit", "greeting": "Thinking of visiting? We'd love to have you! You can book a visit slot here, or ask me how to get to the campus.",
                 "chips": [_chip("Book a campus visit", open_="visit"), _chip("How do I reach the college?", send="How do I contact the college?"),
                           _chip("Request a callback", open_="callback")]}
     if re.search(r"fee|faqs?-pu|pre-university|admission-enquiry-pu|enquiry-pu|academics\.php|\bpu\b", u):
-        return {"topic": "pu", "greeting": "Planning for 1st PUC? Ask me about streams, fees, cutoffs and documents.",
+        return {"topic": "pu", "greeting": "Planning for 1st PUC? Congratulations on getting this far! Ask me anything about streams, fees, cutoffs and documents.",
                 "chips": [_chip("Fees by stream", send="What are the PU fees?"), _chip("Which stream suits me?", open_="advisor"),
                           _chip("Documents needed", open_="documents"), _chip("Book a campus visit", open_="visit")]}
     if re.search(r"student-life|event|achievers|blog", u):
-        return {"topic": "life", "greeting": "Curious about life at CJC? Ask about clubs, fests and events.",
+        return {"topic": "life", "greeting": "Curious about life at CJC? There's a lot going on. Ask me about clubs, fests and events.",
                 "chips": [_chip("Upcoming events", open_="events"), _chip("Student clubs", send="What clubs does the college have?"),
                           _chip("CJC MUN", send="Tell me about CJC MUN")]}
-    return {"topic": "home", "greeting": "Hi, I'm Noah. Ask me anything about Christ Junior College.",
+    return {"topic": "home", "greeting": "Hi there, I'm Noah! Ask me anything about Christ Junior College, I'm happy to help.",
             "chips": CHIPS["default"] + [_chip("Upcoming events", open_="events")]}
