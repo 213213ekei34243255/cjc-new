@@ -739,16 +739,45 @@
       try { recognizer.start(); } catch (e) { /* already started */ }
     }
     function plain(t) { return String(t || '').replace(/\*\*/g, '').replace(/https?:\/\/\S+/g, '').replace(/[\u2022*-]\s/g, ' '); }
+    /* VOICE-START
+     * Read-aloud uses a female voice. Browsers do not say which voice is male or female, so we choose by the
+     * well-known names (Windows Zira/Neerja/Swara/Sapna/Pallavi/Shruti/Sobhana, Apple Samantha/Veena/Lekha,
+     * Google's default voices). If a device only has a male voice for the language, the pitch is raised.
+     * VOICE-END marker below. */
+    var VOICE = {
+      female: /\b(female|woman|zira|hazel|susan|heera|neerja|swara|kalpana|sapna|pallavi|shruti|sobhana|lekha|veena|soumya|samantha|karen|moira|tessa|fiona|victoria|allison|ava|aria|jenny|sonia|libby|natasha|clara|emma|ananya|aarti|priya|kavya|kajal|tara)\b|^google\b/i,
+      male: /\b(male|david|mark|george|ravi|prabhat|madhur|hemant|gagan|valluvar|midhun|mohan|rishi|daniel|alex|fred|james|guy|ryan|thomas|oliver|arthur|aaron|bruce|ralph|jorge|diego)\b/i,
+      norm: function (l) { return String(l || '').toLowerCase().replace('_', '-'); },
+      isFemale: function (v) { return VOICE.female.test(v.name || '') && !VOICE.male.test(v.name || ''); },
+      pick: function (voices, lang, speech) {
+        var exact = VOICE.norm(speech);
+        var inLang = (voices || []).filter(function (v) { return v.lang && VOICE.norm(v.lang).indexOf(lang) === 0; });
+        var fem = inLang.filter(VOICE.isFemale).sort(function (a, b) { return (VOICE.norm(b.lang) === exact) - (VOICE.norm(a.lang) === exact); });
+        if (fem.length) return { voice: fem[0], confirmed: true };
+        var neutral = inLang.filter(function (v) { return !VOICE.male.test(v.name || ''); });
+        return { voice: neutral[0] || inLang[0] || null, confirmed: false };
+      }
+    };
+    /* VOICE-END */
     function speak(text) {
       if (!window.speechSynthesis) return;
-      try {
-        speechSynthesis.cancel();
-        var u = new SpeechSynthesisUtterance(plain(text)); u.lang = speechLang(); u.rate = 1;
-        var voices = speechSynthesis.getVoices() || [];
-        var v = voices.filter(function (x) { return x.lang && x.lang.toLowerCase().indexOf(S.lang) === 0; })[0];
-        if (v) u.voice = v;
-        speechSynthesis.speak(u);
-      } catch (e) { /* ignore */ }
+      var say = function () {
+        try {
+          speechSynthesis.cancel();
+          var u = new SpeechSynthesisUtterance(plain(text)); u.lang = speechLang(); u.rate = 1;
+          var all = speechSynthesis.getVoices() || [];
+          var pick = VOICE.pick(all, S.lang, speechLang());
+          if (!pick.voice && all.length && S.lang !== 'en') { toast('No voice for this language is installed on this device'); return; }
+          if (pick.voice) u.voice = pick.voice;
+          u.pitch = pick.confirmed ? 1.05 : 1.3;        // no confirmed female voice installed: raise the pitch
+          speechSynthesis.speak(u);
+        } catch (e) { /* ignore */ }
+      };
+      if ((speechSynthesis.getVoices() || []).length) return say();
+      // Some browsers load their voice list late; wait briefly for it so the first reply is not read by a default male voice.
+      var fired = false, go = function () { if (!fired) { fired = true; say(); } };
+      try { speechSynthesis.addEventListener('voiceschanged', go, { once: true }); } catch (e) { /* old browsers */ }
+      setTimeout(go, 700);
     }
     function stopSpeaking() { try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) { /* ignore */ } }
 
