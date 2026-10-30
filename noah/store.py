@@ -114,6 +114,7 @@ CREATE TABLE IF NOT EXISTS events (
     link_url TEXT,
     contact TEXT,
     tag TEXT,
+    over INTEGER NOT NULL DEFAULT 0,
     active INTEGER NOT NULL DEFAULT 1,
     sort INTEGER NOT NULL DEFAULT 100
 );
@@ -169,6 +170,10 @@ class Store:
                 try:
                     conn.execute("PRAGMA journal_mode=WAL")
                     conn.executescript(SCHEMA)
+                    # databases created before the "over" flag existed get the column added in place
+                    cols = {row["name"] for row in conn.execute("PRAGMA table_info(events)")}
+                    if "over" not in cols:
+                        conn.execute("ALTER TABLE events ADD COLUMN over INTEGER NOT NULL DEFAULT 0")
                     conn.commit()
                 finally:
                     conn.close()
@@ -424,24 +429,27 @@ class Store:
             return cur.rowcount > 0
 
     # -- events -------------------------------------------------------------------------------------
-    def seed_events(self, events):
+    def event_count(self):
         with self._db() as db:
-            if db.execute("SELECT COUNT(*) AS n FROM events").fetchone()["n"]:
-                return
-            for i, e in enumerate(events):
-                self._write_event(db, e, i)
+            return db.execute("SELECT COUNT(*) AS n FROM events").fetchone()["n"]
+
+    def write_event(self, e):
+        """Insert or replace one event without touching the answer-cache version (used by seeding)."""
+        with self._db() as db:
+            self._write_event(db, e)
 
     @staticmethod
     def _write_event(db, e, sort=100):
         db.execute(
-            "INSERT INTO events(id,title,blurb,starts,ends,location,link_label,link_url,contact,tag,active,sort)"
-            " VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
+            "INSERT INTO events(id,title,blurb,starts,ends,location,link_label,link_url,contact,tag,over,active,sort)"
+            " VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
             " ON CONFLICT(id) DO UPDATE SET title=excluded.title, blurb=excluded.blurb, starts=excluded.starts,"
             " ends=excluded.ends, location=excluded.location, link_label=excluded.link_label,"
-            " link_url=excluded.link_url, contact=excluded.contact, tag=excluded.tag, active=excluded.active, sort=excluded.sort",
+            " link_url=excluded.link_url, contact=excluded.contact, tag=excluded.tag, over=excluded.over,"
+            " active=excluded.active, sort=excluded.sort",
             (e["id"], e["title"], e.get("blurb", ""), e.get("starts") or "", e.get("ends") or "", e.get("location", ""),
              e.get("link_label", ""), e.get("link_url", ""), e.get("contact", ""), e.get("tag", ""),
-             1 if e.get("active", True) else 0, int(e.get("sort", sort))))
+             1 if e.get("over") else 0, 1 if e.get("active", True) else 0, int(e.get("sort", sort))))
 
     def upsert_event(self, e):
         with self._db() as db:

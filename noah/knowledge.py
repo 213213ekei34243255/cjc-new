@@ -142,9 +142,16 @@ def facts_text(store=None):
             events_feature.seed(store)
             events = store.list_events()
             if events:
-                parts.append("EVENTS AND CAMPAIGNS\n" + "\n".join(
-                    f"- {e['title']}: {e['blurb']}" + (f" Starts {e['starts']}." if e["starts"] else " Dates not announced yet.")
-                    + (f" Link: {e['link_url']}" if e["link_url"] else "") for e in events))
+                def event_line(e):
+                    line = f"- {e['title']}: {e['blurb']}"
+                    if e.get("over"):
+                        line += " This year's edition is over."
+                    elif e["starts"]:
+                        line += f" Starts {e['starts']}." + (f" Runs until {e['ends']}." if e["ends"] else "")
+                    else:
+                        line += " Dates not announced yet."
+                    return line + (f" Link: {e['link_url']}" if e["link_url"] else "")
+                parts.append("EVENTS AND CAMPAIGNS\n" + "\n".join(event_line(e) for e in events))
             learned = store.list_learned()
             if learned:
                 parts.append("STAFF-APPROVED ANSWERS (these override anything above)\n" + "\n".join(
