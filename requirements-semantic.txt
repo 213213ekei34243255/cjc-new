@@ -1,0 +1,6 @@
+# OPTIONAL. Only improves the Qwen backup model's retrieval (embedding search instead of keyword search).
+# Gemini reads the whole fact sheet and does not need these. They add roughly 2 GB to the image.
+# Install with:  pip install -r requirements-semantic.txt
+numpy
+torch
+sentence-transformers
