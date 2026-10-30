@@ -1159,7 +1159,7 @@
     /* ============================================================================================
      * 15. Feature 10 - Event assistant
      * ========================================================================================== */
-    var TAG_COLOR = { conference: '#7c3aed', admission: '#e0148c', fest: '#0891b2', sports: '#0e9f6e' };
+    var TAG_COLOR = { conference: '#7c3aed', admission: '#e0148c', fest: '#0891b2', sports: '#0e9f6e', celebration: '#c81e3a' };
     PANELS.events = function (ctx) {
       loading(ctx.body, 3);
       var timer = null;
@@ -1169,7 +1169,7 @@
         var box = h('div', { class: 'nw-step' }, h('h3', { class: 'nw-q' }, 'Events and campaigns'), h('p', { class: 'nw-hint' }, 'Dates, links and reminders for what is happening at CJC.'));
         var tickers = [];
         r.data.events.forEach(function (e, k) {
-          var status = e.status === 'happening' ? h('span', { class: 'nw-pill ok' }, 'Happening now') : e.status === 'today' ? h('span', { class: 'nw-pill ok' }, 'Today') : e.status === 'past' ? h('span', { class: 'nw-pill' }, 'Ended') : e.status === 'upcoming' ? h('span', { class: 'nw-pill brand' }, 'In ' + e.days_left + (e.days_left === 1 ? ' day' : ' days')) : h('span', { class: 'nw-pill warn' }, 'Dates to be announced');
+          var status = e.status === 'over' ? h('span', { class: 'nw-pill' }, 'Over for this year') : e.status === 'happening' ? h('span', { class: 'nw-pill ok' }, 'Happening now') : e.status === 'today' ? h('span', { class: 'nw-pill ok' }, 'Today') : e.status === 'past' ? h('span', { class: 'nw-pill' }, 'Ended') : e.status === 'upcoming' ? h('span', { class: 'nw-pill brand' }, 'In ' + e.days_left + (e.days_left === 1 ? ' day' : ' days')) : h('span', { class: 'nw-pill warn' }, 'Dates to be announced');
           var card = h('div', { class: 'nw-ev', style: '--c:' + (TAG_COLOR[e.tag] || '#1746d1') + ';animation-delay:' + (k * 80) + 'ms' }, h('div', { class: 'nw-pills', style: 'margin:0 0 6px' }, status, e.tag ? h('span', { class: 'nw-pill' }, e.tag) : null), h('h4', {}, e.title), h('p', {}, e.blurb));
           if (e.status === 'upcoming') {
             var cd = h('div', { class: 'nw-cd' }, ['Days', 'Hours', 'Min', 'Sec'].map(function (u) { return h('div', {}, h('b', {}, '0'), h('small', {}, u)); }));
@@ -1182,7 +1182,7 @@
           if (e.contact) card.appendChild(h('div', { class: 'nw-kv' }, h('span', {}, 'Contact'), h('b', {}, /@/.test(e.contact) ? h('a', { href: 'mailto:' + e.contact }, e.contact) : /^\+?[\d\s]+$/.test(e.contact) ? h('a', { href: 'tel:' + e.contact.replace(/\s/g, '') }, e.contact) : e.contact)));
           var row = h('div', { class: 'nw-acts', style: 'margin-top:10px' });
           if (e.link_url) row.appendChild(h('a', { class: 'nw-btn sm', href: safeUrl(e.link_url), target: '_blank', rel: 'noopener noreferrer' }, icon('link', 14), e.link_label || 'Details'));
-          if (e.starts && e.status !== 'past') row.appendChild(h('button', { class: 'nw-btn ghost sm', onclick: function () {
+          if (e.starts && e.status !== 'past' && e.status !== 'over') row.appendChild(h('button', { class: 'nw-btn ghost sm', onclick: function () {
             var d0 = e.starts.split('T'), allDay = !d0[1];
             downloadFile(e.id + '.ics', makeIcs([{ uid: e.id, title: e.title, desc: e.blurb, location: e.location, date: d0[0], start: d0[1], end: d0[1], allDay: allDay, endDate: e.ends ? e.ends.split('T')[0] : null, alarms: [1440, 60] }]));
           } }, icon('calendar', 14), 'Remind me'));
@@ -1602,13 +1602,15 @@
             function inp(name, ph, type) { f[name] = h('input', { class: 'nw-f', type: type || 'text', placeholder: ph || '', value: e[name] || '' }); return f[name]; }
             var sd = (e.starts || '').split('T'), ed = (e.ends || '').split('T');
             f.sdate = h('input', { class: 'nw-f', type: 'date', value: sd[0] || '' }); f.stime = h('input', { class: 'nw-f', type: 'time', value: sd[1] || '' }); f.edate = h('input', { class: 'nw-f', type: 'date', value: ed[0] || '' });
-            f.tag = h('select', { class: 'nw-f' }, ['', 'conference', 'admission', 'fest', 'sports'].map(function (t) { return h('option', { value: t, selected: t === (e.tag || '') ? true : null }, t || 'no tag'); }));
+            f.tag = h('select', { class: 'nw-f' }, ['', 'conference', 'admission', 'fest', 'sports', 'celebration'].map(function (t) { return h('option', { value: t, selected: t === (e.tag || '') ? true : null }, t || 'no tag'); }));
             f.active = h('input', { type: 'checkbox', checked: e.active ? true : null });
+            f.over = h('input', { type: 'checkbox', checked: e.over ? true : null });
             put(clear(form), h('b', {}, e.id ? 'Edit ' + e.title : 'Add an event'), h('div', { style: 'height:8px' }), field('Title', inp('title', 'Title')), field('Description', inp('blurb', 'One or two sentences')),
               h('div', { class: 'nw-row2', style: 'margin:0' }, field('Starts', f.sdate), field('Time (optional)', f.stime), field('Ends', f.edate)), field('Where', inp('location', 'Location')), field('Link label', inp('link_label', 'Register')), field('Link (https://)', inp('link_url', 'https://')), field('Contact', inp('contact', 'Email or phone')), field('Tag', f.tag),
               h('label', { class: 'nw-check' }, f.active, h('span', {}, 'Visible to visitors')),
+              h('label', { class: 'nw-check' }, f.over, h('span', {}, 'This year’s edition is over')),
               h('div', { class: 'nw-row2' }, h('button', { class: 'nw-btn', onclick: function () {
-                var body = { id: e.id, title: f.title.value, blurb: f.blurb.value, starts: f.sdate.value ? f.sdate.value + (f.stime.value ? 'T' + f.stime.value : '') : '', ends: f.edate.value, location: f.location.value, link_label: f.link_label.value, link_url: f.link_url.value, contact: f.contact.value, tag: f.tag.value, active: f.active.checked, sort: e.sort || 50 };
+                var body = { id: e.id, title: f.title.value, blurb: f.blurb.value, starts: f.sdate.value ? f.sdate.value + (f.stime.value ? 'T' + f.stime.value : '') : '', ends: f.edate.value, location: f.location.value, link_label: f.link_label.value, link_url: f.link_url.value, contact: f.contact.value, tag: f.tag.value, active: f.active.checked, over: f.over.checked, sort: e.sort || 50 };
                 mutate('POST', '/api/staff/events', body, function () { toast('Saved'); draw(); });
               } }, 'Save event'), e.id ? h('button', { class: 'nw-btn ghost', onclick: function () { editor(null); } }, 'New event') : null));
           }
