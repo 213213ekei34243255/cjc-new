@@ -23,7 +23,7 @@
     /* ============================================================================================
      * 1. Small utilities
      * ========================================================================================== */
-    var VERSION = '2026-10-31.7';
+    var VERSION = '2026-11-03.9';
     var LS = {
       get: function (k, d) { try { var v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } },
       set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) { /* private mode */ } },
@@ -174,7 +174,7 @@
 
     var TOOLS = [
       { id: 'advisor', icon: 'compass', key: 'advisor', hue: '#e0148c', blurb: 'Find the stream that fits you' },
-      { id: 'callback', icon: 'phone', key: 'callback', hue: '#1746d1', blurb: 'We call you back' },
+      { id: 'callback', icon: 'phone', key: 'callback', hue: '#1746d1', blurb: 'We call you back', tile: false },
       { id: 'visit', icon: 'calendar', key: 'visit', hue: '#0e9f6e', blurb: 'Pick a day and time' },
       { id: 'documents', icon: 'file', key: 'documents', hue: '#d97706', blurb: 'Tick off and save as PDF' },
       { id: 'careers', icon: 'trend', key: 'careers', hue: '#7c3aed', blurb: 'Exams, courses, careers' },
@@ -679,6 +679,7 @@
       var feat = (S.ctx && S.ctx.features) || {};
       var grid = h('div', { class: 'nw-tiles' });
       TOOLS.forEach(function (t, i) {
+        if (t.tile === false) return;                                  // not offered in the Tools list or the welcome grid
         if ((t.id === 'wellness' && feat.wellness === false) || (t.id === 'student' && feat.student === false)) return;
         grid.appendChild(h('button', { class: 'nw-tile', style: '--hue:' + t.hue + ';animation-delay:' + (120 + i * 55) + 'ms', onclick: function () { openPanel(t.id); } },
           h('span', { class: 'ti' }, icon(t.icon, 17)), h('b', { 'data-k': t.key }, T(t.key)), h('small', {}, t.blurb)));
@@ -1504,7 +1505,7 @@
           var byDay = {}; a.per_day.forEach(function (x) { byDay[x.d] = x.n; });
           var days = []; for (var i = 29; i >= 0; i--) { var dt = new Date(Date.now() - i * 86400000); days.push(dt.toISOString().slice(0, 10)); }
           var hours = []; for (var k = 0; k < 24; k++) hours.push(0); a.per_hour.forEach(function (x) { if (x.h >= 0 && x.h < 24) hours[x.h] = x.n; });
-          var total = a.engines.reduce(function (s, e) { return s + e.n; }, 0) || 1, acc = 0, pal = { gemini: '#1746d1', qwen: '#f59e0b', rules: '#0f9d63', cache: '#7c3aed', staff: '#e0148c', none: '#d92d20' };
+          var total = a.engines.reduce(function (s, e) { return s + e.n; }, 0) || 1, acc = 0, pal = { Rexy: '#1746d1', qwen: '#f59e0b', rules: '#0f9d63', cache: '#7c3aed', staff: '#e0148c', none: '#d92d20' };
           var stops = a.engines.map(function (e) { var from = acc / total * 360; acc += e.n; return (pal[e.engine] || '#999') + ' ' + from + 'deg ' + (acc / total * 360) + 'deg'; }).join(',');
           var l = d.llm;
           put(clear(pane), 
@@ -1516,8 +1517,8 @@
             h('div', { class: 'nw-sec' }, 'Pages with most questions'), a.top_pages.length ? h('div', { class: 'nw-card' }, a.top_pages.map(function (p) { return h('div', { class: 'nw-kv' }, h('span', { style: 'width:34px;font-weight:700' }, p.n), h('b', { style: 'font-size:12px' }, p.page.replace(/^https?:\/\/[^/]+/, '') || '/')); })) : h('div', { class: 'nw-note' }, 'No page data yet.'),
             h('div', { class: 'nw-sec' }, 'Languages'), h('div', { class: 'nw-pills' }, a.languages.map(function (x) { return h('span', { class: 'nw-pill' }, (x.lang || '?') + ' ' + x.n); })),
             h('div', { class: 'nw-sec' }, 'System'), h('div', { class: 'nw-card' },
-              kv('Main model', l.gemini.configured ? l.gemini.model + (l.gemini.breaker.open_for_s ? ' (paused ' + l.gemini.breaker.open_for_s + 's after errors)' : '') : 'NOT CONFIGURED - set GEMINI_API_KEY'),
-              kv('Backup model', l.qwen.enabled ? 'Qwen' + (l.qwen.breaker.open_for_s ? ' (paused)' : '') : 'off'), kv('Last Gemini error', l.gemini.breaker.last_error || 'none'),
+              kv('Main model', l.primary.configured ? l.primary.name + (l.primary.breaker.open_for_s ? ' (paused ' + l.primary.breaker.open_for_s + 's after errors)' : '') : 'NOT CONNECTED - add the model key on the server (see README)'),
+              kv('Backup model', l.qwen.enabled ? 'Qwen' + (l.qwen.breaker.open_for_s ? ' (paused)' : '') : 'off'), kv('Last Rexy error', l.primary.breaker.last_error || 'none'),
               kv('Email alerts', d.notifications.email ? 'on' : 'off'), kv('Webhook', d.notifications.webhook ? 'on' : 'off'), kv('WhatsApp', d.notifications.whatsapp ? 'on' : 'off'), kv('Chat log kept', d.retention_days + ' days'), kv('Widget file version', VERSION)),
             h('button', { class: 'nw-btn ghost block', style: 'margin-top:12px', onclick: function () { mutate('POST', '/api/staff/purge', {}, function (r) { toast('Removed ' + r.removed + ' old rows'); }); } }, icon('trash', 15), 'Delete chat logs older than the retention period'));
         });
