@@ -61,7 +61,7 @@ def overview():
         if row["engine"] == "gemini":
             row["engine"] = "Rexy"                       # the dashboard never shows the underlying service name
     return jsonify({"analytics": analytics, "llm": llm.status(),
-                    "retention_days": config.CHAT_RETENTION_DAYS,
+                    "retention_days": config.CHAT_RETENTION_DAYS, "storage": config.storage_info(),
                     "notifications": {"email": bool(config.SMTP_HOST and config.ADMISSIONS_EMAIL), "webhook": bool(config.NOTIFY_WEBHOOK_URL),
                                       "whatsapp": bool(config.WA_ACCESS_TOKEN and config.WA_PHONE_NUMBER_ID)}})
 

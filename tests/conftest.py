@@ -27,6 +27,25 @@ class _State:
         cls.gemini_calls, cls.llama_calls = [], []
 
 
+NATIVE = {
+    "Hindi": "नमस्ते! मैं नोआ हूँ। PCMB की फीस ₹80,000 प्रति वर्ष है।",
+    "Kannada": "ನಮಸ್ಕಾರ! ನಾನು ನೋಆ. PCMB ಶುಲ್ಕ ವರ್ಷಕ್ಕೆ ₹80,000 ಆಗಿದೆ.",
+    "Tamil": "வணக்கம்! நான் நோவா. PCMB கட்டணம் ஆண்டுக்கு ₹80,000 ஆகும்.",
+    "Malayalam": "നമസ്കാരം! ഞാൻ നോവ. PCMB ഫീസ് വർഷത്തിൽ ₹80,000 ആണ്.",
+    "Telugu": "నమస్కారం! నేను నోవా. PCMB ఫీజు సంవత్సరానికి ₹80,000.",
+    "English": "Hello! I am Noah. The PCMB fee is ₹80,000 per year.",
+}
+
+
+def native_for(system):
+    for name, text in NATIVE.items():
+        if f"Reply in {name}" in system:
+            return text
+    return NATIVE["English"]
+
+
+# The real services send raw UTF-8 (not escaped sequences) and an SSE content type with NO charset. The fakes do the same,
+# which is what exposed the Hindi bug: ASCII-only fakes could never have caught it.
 def gemini_text_for(body):
     """What the fake Gemini says, decided from the request it received."""
     system = ((body.get("systemInstruction") or {}).get("parts") or [{}])[0].get("text", "")
@@ -43,6 +62,8 @@ def gemini_text_for(body):
         qs = [{"q": f"Question {i}?", "options": ["A", "B", "C", "D"], "answer": i % 4, "explain": "Because."} for i in range(5)]
         qs.append({"q": "broken", "options": ["A", "A"], "answer": 9})
         return json.dumps({"questions": qs})
+    if "INDICTEST" in user:
+        return native_for(system)
     if "UNKNOWNQ" in user:
         return "[[UNKNOWN]] I do not have that detail. The admissions office can help."
     if "WRONGFEE" in user:
@@ -79,13 +100,13 @@ class _GeminiHandler(BaseHTTPRequestHandler):
             self.end_headers()
             for i in range(0, len(text), 7):
                 chunk = {"candidates": [{"content": {"parts": [{"text": text[i:i + 7]}]}}]}
-                self.wfile.write(f"data: {json.dumps(chunk)}\r\n\r\n".encode())
+                self.wfile.write(f"data: {json.dumps(chunk, ensure_ascii=False)}\r\n\r\n".encode("utf-8"))
                 self.wfile.flush()
             return
         self._json(200, {"candidates": [{"content": {"parts": [{"text": text}]}, "finishReason": "STOP"}]})
 
     def _json(self, code, obj):
-        raw = json.dumps(obj).encode()
+        raw = json.dumps(obj, ensure_ascii=False).encode("utf-8")
         self.send_response(code)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(raw)))
@@ -106,7 +127,7 @@ class _LlamaHandler(BaseHTTPRequestHandler):
             self.end_headers()
             return
         user = body["messages"][-1]["content"]
-        text = "Qwen says: " + user[:50]
+        text = native_for(body["messages"][0]["content"]) if "INDICTEST" in user else "Qwen says: " + user[:50]
         if body.get("response_format"):
             text = gemini_text_for({"contents": [{"parts": [{"text": user}]}], "generationConfig": {"responseMimeType": "application/json"},
                                     "systemInstruction": {"parts": [{"text": body["messages"][0]["content"]}]}})
@@ -115,10 +136,10 @@ class _LlamaHandler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "text/event-stream")
             self.end_headers()
             for i in range(0, len(text), 9):
-                self.wfile.write(f"data: {json.dumps({'choices': [{'delta': {'content': text[i:i + 9]}}]})}\n\n".encode())
+                self.wfile.write(f"data: {json.dumps({'choices': [{'delta': {'content': text[i:i + 9]}}]}, ensure_ascii=False)}\n\n".encode("utf-8"))
             self.wfile.write(b"data: [DONE]\n\n")
             return
-        raw = json.dumps({"choices": [{"message": {"content": text}}]}).encode()
+        raw = json.dumps({"choices": [{"message": {"content": text}}]}, ensure_ascii=False).encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(raw)))
@@ -137,6 +158,8 @@ _llama_srv = _serve(_LlamaHandler)
 
 _tmp = tempfile.mkdtemp(prefix="noah-test-")
 os.environ.update({
+    "NOAH_SKIP_DOTENV": "1",                       # never read a real .env (it may hold live SMTP credentials)
+    "SMTP_HOST": "", "ADMISSIONS_EMAIL": "", "COUNSELLING_EMAIL": "", "NOTIFY_WEBHOOK_URL": "",
     "NOAH_DB_PATH": os.path.join(_tmp, "boot.db"),
     "NOAH_SECRET_KEY": "x" * 40,
     "STAFF_PASSWORD": "correct-horse-battery",

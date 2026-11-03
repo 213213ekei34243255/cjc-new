@@ -23,7 +23,7 @@
     /* ============================================================================================
      * 1. Small utilities
      * ========================================================================================== */
-    var VERSION = '2026-11-03.9';
+    var VERSION = '2026-11-03.10';
     var LS = {
       get: function (k, d) { try { var v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } },
       set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) { /* private mode */ } },
@@ -1519,7 +1519,9 @@
             h('div', { class: 'nw-sec' }, 'System'), h('div', { class: 'nw-card' },
               kv('Main model', l.primary.configured ? l.primary.name + (l.primary.breaker.open_for_s ? ' (paused ' + l.primary.breaker.open_for_s + 's after errors)' : '') : 'NOT CONNECTED - add the model key on the server (see README)'),
               kv('Backup model', l.qwen.enabled ? 'Qwen' + (l.qwen.breaker.open_for_s ? ' (paused)' : '') : 'off'), kv('Last Rexy error', l.primary.breaker.last_error || 'none'),
-              kv('Email alerts', d.notifications.email ? 'on' : 'off'), kv('Webhook', d.notifications.webhook ? 'on' : 'off'), kv('WhatsApp', d.notifications.whatsapp ? 'on' : 'off'), kv('Chat log kept', d.retention_days + ' days'), kv('Widget file version', VERSION)),
+              kv('Email alerts', d.notifications.email ? 'on' : 'off'), kv('Webhook', d.notifications.webhook ? 'on' : 'off'), kv('WhatsApp', d.notifications.whatsapp ? 'on' : 'off'), kv('Chat log kept', d.retention_days + ' days'),
+              kv('Data storage', d.storage.persistent ? 'Persistent disk (' + d.storage.path + ')' : 'NOT on a persistent disk (' + d.storage.path + '). Everything is lost when the server restarts. Set NOAH_DB_PATH to a file on your disk, see README.'),
+              kv('Widget file version', VERSION)),
             h('button', { class: 'nw-btn ghost block', style: 'margin-top:12px', onclick: function () { mutate('POST', '/api/staff/purge', {}, function (r) { toast('Removed ' + r.removed + ' old rows'); }); } }, icon('trash', 15), 'Delete chat logs older than the retention period'));
         });
       }

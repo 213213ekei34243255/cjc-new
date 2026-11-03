@@ -10,8 +10,9 @@ the staff panel. The server only serves JSON.
 
 ## 1. Start in 5 minutes
 
-1. Set the environment variables (see `.env.example`). The two you need first:
-   `GEMINI_API_KEY` and `STAFF_PASSWORD` (10+ characters). Also set `NOAH_SECRET_KEY` (32+ random characters).
+1. Fill in `.env` (a template is in `.env.example`). It is read automatically when you run locally; on Render use Environment > "Add from .env".
+   Never commit `.env`: it is git-ignored and docker-ignored. The one value you must add yourself is `GEMINI_API_KEY`.
+   `STAFF_PASSWORD` (10+ characters) and `NOAH_SECRET_KEY` (32+ random characters) are already generated in it.
 2. `pip install -r requirements.txt` then `python app.py` (or deploy with the existing `Dockerfile` / `start.sh`).
 3. Open `http://localhost:5000/demo`. That page loads `widget.js` exactly like the college site does.
 4. Open the staff panel: type `/staff` in the chat (or add `#noah=staff` to the page address) and sign in.
@@ -27,6 +28,22 @@ the staff panel. The server only serves JSON.
   Qwen gets a short prompt with only the top snippets, because a 1.5B model cannot hold the full sheet.
 * Fixed facts (fees, contact, leadership, hostel, board, documents) are answered by code, never by a model.
   Any rupee amount a model writes is checked against the real fee table and replaced if it does not match.
+
+### Check a deployment's settings
+Open `https://YOUR-SERVER/api/health`. It answers with yes/no values only, never a secret:
+`"ai": "gemini"` (`qwen-only` = no Gemini key), `"staff": "ok"` (`missing` = no `STAFF_PASSWORD`, `too_short` = under 10 characters),
+`"email": true` (SMTP and `ADMISSIONS_EMAIL` are set). The `.env` file is git-ignored, so it never reaches Render by itself:
+every value in it must also be added under Render > Environment, followed by a redeploy.
+
+## Keeping your data across restarts (Render disk)
+Anything outside a mounted disk is wiped every time Render restarts or redeploys. Noah's database is one file, so it must sit on the disk:
+
+1. In Render, attach a disk to the service (for example mounted at `/var/data/staff`).
+2. Add the environment variable `NOAH_DB_PATH=/var/data/staff/noah.db` (use your own mount path) and redeploy.
+3. Open `https://YOUR-SERVER/api/health`: `"storage": "disk"` means the data survives restarts. In the staff panel the same fact is on the Overview tab, System card, "Data storage" line. Anything else shows a red warning, and the logs say so at startup.
+
+Without `NOAH_DB_PATH` the app looks for a mounted disk by itself (`/var/data/staff`, `/var/data`, `/data`, or any disk mounted inside `/var/data`). A plain `/var/data` folder is not enough: it exists on Render's temporary filesystem even when the real disk is mounted one level deeper, which is exactly how data got lost.
+The Qwen backup model (about 1 GB) goes on the disk only if more than 4 GB is free, otherwise to `/tmp`, so it can never fill the disk that holds your database. Back up now and then: Leads tab > CSV downloads every request.
 
 ## 2. The 13 features and where they live
 
@@ -48,6 +65,13 @@ the staff panel. The server only serves JSON.
 
 Typing a request in chat also opens the right tool ("which stream suits me", "call me back", "documents needed", ...).
 In every language, Gemini can open a tool by itself.
+
+### Noah's voice
+Noah is written to talk like a kind, well-informed friend at the front desk: contractions, simple words, a sincere word about how the person
+might feel before the answer, honest about being an assistant, and feelings shown in words, never emoji. The personality lives in the
+`<personality>` and `<examples>` blocks of `IDENTITY` in `noah/brain.py` (the fixed replies and greetings are in the same file).
+After setting your key, run `python tools/tone_check.py` to hear twelve typical replies from the real model; it flags emoji, stiff phrases and
+answers that run too long. Tests (`tests/test_tone.py`) keep emoji and script-like wording out of everything Noah can say.
 
 ## 3. Staff guide (all inside the widget)
 
@@ -71,7 +95,7 @@ In every language, Gemini can open a tool by itself.
 4. **Consent and privacy** (India's DPDP Act 2023 treats under-18s specially). Forms carry a consent tick-box, chats are deleted after
    `CHAT_RETENTION_DAYS` (default 90), wellness chats are never logged. Have the college confirm the wording and retention period.
    The old line "Conversations are private; no storage or sharing" was untrue, so it was replaced with an accurate statement.
-5. **Fill in real dates**: CJC MUN, XITE, Magnachrista, Magnasports (staff Events tab). Visit slots and capacity: `data/visit_slots.json`.
+5. **Fill in real dates**: CJC MUN and Magnasports (staff Events tab). Christmas celebrations (5-31 December 2026) are already listed; XITE and Magnachrista are marked "over for this year" (tick "This year's edition is over" on any event to do the same). Visit slots and capacity: `data/visit_slots.json`.
 6. **Student Zone is not the college's Student Login portal.** It is gated by access codes that staff issue. Connecting it to the real
    portal would need that system's cooperation.
 7. Set `ADMISSIONS_EMAIL` + SMTP (or `NOTIFY_WEBHOOK_URL`) so the office is alerted. Without them leads are still saved and shown in the staff panel.
@@ -110,7 +134,8 @@ microphone/speech (needs a real browser and permission), and printing to PDF (us
 * `start.sh` starts Qwen in the background. Before, a Qwen problem stopped the whole app from booting.
 * `emergency_dashboard.py` ("Her Routine", a location-tracking module) still ships in this repo and stays disabled unless its own
   settings are present. It has nothing to do with the college chatbot and should live in its own project.
-* New data lives in SQLite (`NOAH_DB_PATH`, default `/var/data/noah.db`). The old Postgres log still works if `DATABASE_URL` is set.
+* New data lives in one SQLite file. Leads, counselling requests, visits, staff-taught answers, student codes, event edits and chat logs are all in it.
+  The old Postgres log still works if `DATABASE_URL` is set. See the next section for keeping that file on your Render disk.
 
 ## 8. Layout
 

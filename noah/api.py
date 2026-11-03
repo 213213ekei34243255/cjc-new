@@ -2,6 +2,7 @@
 there are no HTML pages here - only endpoints."""
 
 import logging
+import re
 from functools import wraps
 
 from flask import Blueprint, jsonify, request
@@ -72,12 +73,33 @@ def student_required(fn):
 # ---------------------------------------------------------------------------------------------
 # basics
 # ---------------------------------------------------------------------------------------------
+_widget_cache = {"mtime": None, "version": "unknown"}
+
+
+def widget_version():
+    """Version stamp inside static/widget.js, so you can tell whether a deployment really has the latest file."""
+    path = config.ROOT / "static" / "widget.js"
+    try:
+        mtime = path.stat().st_mtime
+        if _widget_cache["mtime"] != mtime:
+            match = re.search(r"var VERSION = '([^']+)'", path.read_text(encoding="utf-8"))
+            _widget_cache.update(mtime=mtime, version=match.group(1) if match else "unknown")
+    except OSError:
+        return "unknown"
+    return _widget_cache["version"]
+
+
 @api_bp.get("/health")
 def health():
     return jsonify({
         "ok": True,
         "ai": "gemini" if llm.gemini_configured() else ("qwen-only" if config.QWEN_ENABLED else "rules-only"),
         "db": get_store().healthy,
+        # yes/no only, never a value: lets you check a deployment's settings by opening /api/health
+        "staff": auth.staff_status(),
+        "email": bool(config.SMTP_HOST and config.ADMISSIONS_EMAIL),
+        "widget": widget_version(),          # the version of widget.js THIS server is serving
+        "storage": config.storage_info()["kind"],   # "disk" = data survives restarts
     })
 
 

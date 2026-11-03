@@ -8,6 +8,7 @@ import logging
 import smtplib
 import threading
 from email.message import EmailMessage
+from email.utils import formataddr
 
 import requests
 
@@ -20,7 +21,7 @@ def _send_email(to, subject, body):
     if not (config.SMTP_HOST and to and config.SMTP_FROM):
         return False
     msg = EmailMessage()
-    msg["From"] = config.SMTP_FROM
+    msg["From"] = formataddr((config.SMTP_FROM_NAME, config.SMTP_FROM)) if config.SMTP_FROM_NAME else config.SMTP_FROM
     msg["To"] = to
     msg["Subject"] = subject
     msg.set_content(body)

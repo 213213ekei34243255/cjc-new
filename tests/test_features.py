@@ -110,17 +110,80 @@ def test_every_stream_has_a_career_path_and_the_christ_route():
 
 
 # ---- 10. events -------------------------------------------------------------------------------------------
-def test_events_seed_once_and_dates_drive_the_countdown(fresh):
+def test_events_seed_once_and_christmas_leads_the_list(fresh):
     events.seed(fresh)
     events.seed(fresh)
-    items = events.list_events(fresh)
-    assert len(items) == 5 and items[0]["id"] == "cjc-mun-2026" and items[0]["status"] == "dates_tba"
     now = datetime(2026, 11, 1, 10, 0, tzinfo=IST)
-    fresh.upsert_event(events.validate_event({"title": "CJC MUN 2026", "id": "cjc-mun-2026", "starts": "2026-11-21", "ends": "2026-11-22", "sort": 1}))
+    items = events.list_events(fresh, now)
+    assert [e["id"] for e in items] == ["christmas-2026", "cjc-mun-2026", "ibdp-2027-28", "magnasports", "xite", "magnachrista"]
+    christmas = items[0]
+    assert christmas["status"] == "upcoming" and christmas["days_left"] == 34
+    assert christmas["starts"] == "2026-12-05" and christmas["ends"] == "2026-12-31"
+    assert items[1]["status"] == "dates_tba"
+
+
+def test_christmas_runs_for_the_whole_of_december_from_the_fifth():
+    christmas = next(e for e in events._seed_events() if e["id"] == "christmas-2026")
+    assert events.decorate(christmas | {"active": 1}, datetime(2026, 12, 4, 12, tzinfo=IST))["status"] == "upcoming"
+    for day in (5, 15, 20, 25, 31):                       # every day from the 5th to the 31st
+        assert events.decorate(christmas | {"active": 1}, datetime(2026, 12, day, 12, tzinfo=IST))["status"] == "happening"
+    assert events.decorate(christmas | {"active": 1}, datetime(2027, 1, 2, tzinfo=IST))["status"] == "past"
+
+
+def test_xite_and_magnachrista_are_marked_over():
+    now = datetime(2026, 11, 1, tzinfo=IST)
+    seed = {e["id"]: e for e in events._seed_events()}
+    for event_id in ("xite", "magnachrista"):
+        decorated = events.decorate(seed[event_id] | {"active": 1}, now)
+        assert decorated["status"] == "over" and decorated["over"] and decorated["days_left"] is None
+        assert "over" in seed[event_id]["blurb"]
+    assert not events.decorate(seed["magnasports"] | {"active": 1}, now)["over"]
+
+
+def test_staff_edits_to_dates_survive_and_mun_dates_work(fresh):
+    events.seed(fresh)
+    now = datetime(2026, 11, 1, 10, 0, tzinfo=IST)
+    fresh.upsert_event(events.validate_event({"title": "CJC MUN 2026", "id": "cjc-mun-2026", "starts": "2026-11-21", "ends": "2026-11-22", "sort": 2}))
     by_id = {e["id"]: e for e in events.list_events(fresh, now)}
     assert by_id["cjc-mun-2026"]["days_left"] == 20 and by_id["cjc-mun-2026"]["status"] == "upcoming"
     assert events.decorate(by_id["cjc-mun-2026"], datetime(2026, 11, 21, 9, tzinfo=IST))["status"] == "happening"
     assert events.decorate(by_id["cjc-mun-2026"], datetime(2026, 12, 1, tzinfo=IST))["status"] == "past"
+    events.seed(fresh)                                    # seeding again never overwrites staff edits
+    assert fresh.list_events()[0]["id"] in ("christmas-2026", "cjc-mun-2026")
+    assert {e["id"]: e for e in fresh.list_events()}["cjc-mun-2026"]["starts"] == "2026-11-21"
+
+
+def test_existing_database_gets_christmas_and_over_flags_once_without_losing_staff_edits(tmp_path):
+    """A database created by the previous version (no 'over' column, 5 old events, staff-set MUN date) is upgraded in place."""
+    import sqlite3
+    from noah.store import Store
+    path = str(tmp_path / "old.db")
+    conn = sqlite3.connect(path)
+    conn.executescript("""
+        CREATE TABLE events (id TEXT PRIMARY KEY, title TEXT NOT NULL, blurb TEXT, starts TEXT, ends TEXT, location TEXT,
+                             link_label TEXT, link_url TEXT, contact TEXT, tag TEXT, active INTEGER NOT NULL DEFAULT 1, sort INTEGER NOT NULL DEFAULT 100);
+        INSERT INTO events(id,title,blurb,starts,ends,sort) VALUES('xite','XITE','old text','','',11);
+        INSERT INTO events(id,title,blurb,starts,ends,sort) VALUES('magnachrista','Magnachrista','old text','','',12);
+        INSERT INTO events(id,title,blurb,starts,ends,sort) VALUES('cjc-mun-2026','CJC MUN 2026','staff text','2026-11-21','',1);
+    """)
+    conn.commit()
+    conn.close()
+    store = Store(path)
+    events.seed(store)
+    rows = {e["id"]: e for e in store.list_events(active_only=False)}
+    assert rows["christmas-2026"]["starts"] == "2026-12-05"
+    assert rows["xite"]["over"] == 1 and rows["magnachrista"]["over"] == 1
+    assert rows["cjc-mun-2026"]["blurb"] == "staff text" and rows["cjc-mun-2026"]["starts"] == "2026-11-21"
+    version = store.version()
+    events.seed(store)                                                       # second run: nothing to do
+    assert store.version() == version and store.kv_get("events_seed_rev") == 2
+
+
+def test_fact_sheet_tells_the_model_christmas_is_coming_and_which_events_are_over(fresh):
+    text = knowledge.facts_text(fresh)
+    assert "Christmas celebrations" in text and "Starts 2026-12-05. Runs until 2026-12-31." in text
+    assert "XITE" in text and "This year's edition is over." in text
+    assert text.count("This year's edition is over.") == 2
 
 
 def test_event_validation():

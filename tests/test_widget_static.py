@@ -68,3 +68,40 @@ def test_widget_never_embeds_a_secret():
     # Names of settings may appear in help text; actual key material must not.
     assert not re.search(r"AIza[0-9A-Za-z_\-]{20,}", SRC)
     assert not re.search(r"(?i)(api[_-]?key|password|secret)\s*[:=]\s*['\"][^'\"\s]{12,}['\"]", SRC)
+
+
+def test_tools_sheet_can_never_cover_the_message_box():
+    # Regression for the white band / "Tools will not close" bug: the closed sheet used to slide out of the chat area and sit over the composer.
+    assert "$.sheet = h('div', { class: 'nw-sheet', hidden: true })" in SRC               # starts fully removed
+    assert ".nw-body{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}" in SRC   # clips the slid-away sheet
+    assert "visibility:hidden;pointer-events:none" in SRC                                  # closed sheet is invisible and unclickable
+    assert ".nw-comp{position:relative;z-index:8;" in SRC and ".nw-foot{position:relative;z-index:8;" in SRC   # composer paints above any remnant
+    assert "$.sheet.hidden = true" in SRC and "$.sheet.hidden = false" in SRC
+    show = SRC[SRC.index("function showSheet()"):SRC.index("function hideSheet()")]
+    assert "requestAnimationFrame" not in show and "setTimeout" not in show                # opening must not depend on frames or timers
+
+
+def test_escape_closes_the_sheet_before_the_window():
+    assert "if ($.sheet.classList.contains('open')) hideSheet(); else if ($.panel.classList.contains('open')) closePanel(); else close();" in SRC
+
+
+def test_widget_reports_its_version():
+    assert re.search(r"var VERSION = '\d{4}-\d{2}-\d{2}\.\d+';", SRC)
+    assert "version: VERSION" in SRC and "Widget file version" in SRC
+
+
+def test_footer_shows_the_build_number_and_health_reports_the_same_version(client):
+    version = re.search(r"var VERSION = '([^']+)'", SRC).group(1)
+    assert "' \\u00B7 build ' + VERSION.split('.').pop()" in SRC
+    assert client.get("/api/health").json["widget"] == version
+
+
+def test_widget_is_revalidated_on_every_load_by_default(client):
+    assert client.get("/widget.js").headers["Cache-Control"] == "public, max-age=0"
+
+
+def test_call_me_back_is_not_offered_in_the_tools_list():
+    # The callback form still exists (chat and buttons can open it); only its tile was removed from the Tools list and welcome grid.
+    assert "{ id: 'callback', icon: 'phone', key: 'callback', hue: '#1746d1', blurb: 'We call you back', tile: false }" in SRC
+    assert "if (t.tile === false) return;" in SRC
+    assert "PANELS.callback = function" in SRC

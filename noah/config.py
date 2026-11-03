@@ -84,14 +84,69 @@ DATABASE_URL = env("DATABASE_URL")          # legacy Postgres chat log (optional
 CHAT_RETENTION_DAYS = env_int("CHAT_RETENTION_DAYS", 90, 1, 3650)
 
 
+DISK_CANDIDATES = ("/var/data/staff", "/var/data", "/data")
+
+
+def is_on_mount(path, ismount=os.path.ismount):
+    """True when `path` lives on a mounted volume (a Render disk, a Docker volume), not on the container's own temporary filesystem."""
+    for parent in Path(path).parents:
+        if parent == Path(parent.anchor):          # "/" or "C:\\" is always a mount, so it tells us nothing
+            break
+        try:
+            if ismount(str(parent)):
+                return True
+        except OSError:
+            continue
+    return False
+
+
+def find_data_dir(explicit="", candidates=DISK_CANDIDATES, parent="/var/data", exists=os.path.isdir,
+                  ismount=os.path.ismount, writable=lambda p: os.access(p, os.W_OK), children=None):
+    """Where Noah should keep its database. Returns (folder or None, how_sure).
+
+    A plain /var/data folder exists on the container's temporary filesystem even when the real disk is mounted one level
+    deeper (for example at /var/data/staff), and anything stored there is wiped at every restart. So real mount points win:
+      1. NOAH_DATA_DIR, if you set it
+      2. a candidate folder that is a mount point (/var/data/staff, /var/data, /data)
+      3. any mount point directly inside /var/data
+      4. a plain writable candidate folder (works, but cannot be confirmed as persistent)
+    """
+    if explicit:
+        return explicit, "explicit"
+    for c in candidates:
+        if exists(c) and ismount(c) and writable(c):
+            return c, "disk"
+    try:
+        kids = children(parent) if children else [os.path.join(parent, n) for n in sorted(os.listdir(parent))]
+    except OSError:
+        kids = []
+    for k in kids:
+        if exists(k) and ismount(k) and writable(k):
+            return k, "disk"
+    for c in candidates:
+        if exists(c) and writable(c):
+            return c, "folder"
+    return None, "none"
+
+
 def default_db_path():
     explicit = env("NOAH_DB_PATH")
     if explicit:
         return explicit
-    persistent = Path("/var/data")
-    if persistent.is_dir() and os.access(persistent, os.W_OK):
-        return str(persistent / "noah.db")
-    return str(ROOT / "noah.db")
+    folder, _ = find_data_dir(env("NOAH_DATA_DIR"))
+    return str(Path(folder) / "noah.db") if folder else str(ROOT / "noah.db")
+
+
+def storage_info():
+    """Is the database on a persistent disk? kind: 'disk' (yes), 'folder' (a normal folder, may be wiped on restart), 'local' (project folder)."""
+    path = default_db_path()
+    if is_on_mount(path):
+        kind = "disk"
+    elif Path(path).parent == ROOT:
+        kind = "local"
+    else:
+        kind = "folder"
+    return {"kind": kind, "path": path, "persistent": kind == "disk"}
 
 
 # ---- Security ------------------------------------------------------------------

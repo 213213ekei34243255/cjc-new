@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import json
+import re
 from datetime import datetime, timedelta
 
 from noah import brain, config, sessions, whatsapp
@@ -90,9 +91,19 @@ def test_staff_login_is_rate_limited(client):
     assert 429 in codes
 
 
-def test_staff_disabled_without_a_password(client, monkeypatch):
+def test_staff_disabled_without_a_password_and_the_message_says_why(client, monkeypatch):
     monkeypatch.setattr(config, "STAFF_PASSWORD", "")
-    assert post(client, "/api/staff/login", {"password": "anything"}).status_code == 503
+    r = post(client, "/api/staff/login", {"password": "anything"})
+    assert r.status_code == 503 and "no STAFF_PASSWORD" in r.json["error"] and "Environment" in r.json["error"]
+    assert client.get("/api/staff/overview").json["error"] == r.json["error"]
+    assert client.get("/api/health").json["staff"] == "missing"
+
+
+def test_staff_disabled_with_a_too_short_password(client, monkeypatch):
+    monkeypatch.setattr(config, "STAFF_PASSWORD", "short")
+    r = post(client, "/api/staff/login", {"password": "short"})
+    assert r.status_code == 503 and "shorter than 10" in r.json["error"]
+    assert client.get("/api/health").json["staff"] == "too_short"
 
 
 def test_student_token_cannot_open_staff_routes(client, fresh):
@@ -108,7 +119,7 @@ def test_staff_overview_and_analytics(client, fake, staff_headers):
     a = j["analytics"]
     assert a["questions"] == 2 and a["private_chats"] == 1 and a["top_pages"][0]["page"] == "https://christjuniorcollege.in/faqs-pu.php"
     assert a["top_questions"][0]["norm"] == "fees for pcmb"
-    assert "test-key" not in json.dumps(j) and j["llm"]["gemini"]["model"] == "gemini-3.5-flash-lite"
+    assert "test-key" not in json.dumps(j) and j["llm"]["primary"]["name"] == "Rexy CogniAI's Foundational Model"
 
 
 # ---- leads, visits, counselling ------------------------------------------------------------------------------------------------------
@@ -209,12 +220,26 @@ def test_study_errors_are_friendly(client, fresh, fake):
 
 
 # ---- events + timetable via staff ----------------------------------------------------------------------------------------------------------------
+def test_events_api_reports_christmas_and_events_that_are_over(client):
+    by_id = {e["id"]: e for e in client.get("/api/events").json["events"]}
+    assert by_id["christmas-2026"]["starts"] == "2026-12-05" and by_id["christmas-2026"]["ends"] == "2026-12-31"
+    assert by_id["xite"]["status"] == "over" and by_id["magnachrista"]["status"] == "over"
+    assert by_id["magnasports"]["status"] == "dates_tba"
+
+
+def test_staff_can_mark_an_event_over(client, staff_headers):
+    saved = post(client, "/api/staff/events", {"id": "magnasports", "title": "Magnasports", "over": True}, staff_headers)
+    assert saved.status_code == 200 and saved.json["event"]["over"] is True
+    by_id = {e["id"]: e for e in client.get("/api/events").json["events"]}
+    assert by_id["magnasports"]["status"] == "over"
+
+
 def test_staff_can_set_event_dates_and_replace_the_timetable(client, fake, staff_headers):
     start = (datetime.now(events_feature.IST) + timedelta(days=10)).date().isoformat()
     ev = post(client, "/api/staff/events", {"id": "cjc-mun-2026", "title": "CJC MUN 2026", "starts": start, "sort": 1, "link_url": "https://cjcmun.com"}, staff_headers)
     assert ev.status_code == 200
-    first = client.get("/api/events").json["events"][0]
-    assert first["id"] == "cjc-mun-2026" and first["days_left"] == 10 and first["status"] == "upcoming"
+    mun = next(e for e in client.get("/api/events").json["events"] if e["id"] == "cjc-mun-2026")
+    assert mun["days_left"] == 10 and mun["status"] == "upcoming"
     assert post(client, "/api/staff/events", {"title": "Bad", "link_url": "javascript:1"}, staff_headers).status_code == 400
 
     tt = {"title": "Prelims", "schedule": [{"date": "01.03.2027", "day": "Monday", "subjects": [{"name": "Physics", "code": "33"}]}]}
@@ -243,7 +268,10 @@ def test_data_endpoints(client):
 
 def test_health_reports_primary_model(client):
     j = client.get("/api/health").json
-    assert j == {"ok": True, "ai": "gemini", "db": True}
+    assert j == {"ok": True, "ai": "gemini", "db": True, "staff": "ok", "email": False, "widget": j["widget"], "storage": j["storage"]}
+    assert j["storage"] in ("disk", "folder", "local")                # "disk" = the data survives a restart
+    assert re.fullmatch(r"\d{4}-\d{2}-\d{2}\.\d+", j["widget"])
+    assert "correct-horse" not in str(j)                               # yes/no only, never a value
 
 
 # ---- WhatsApp ------------------------------------------------------------------------------------------------------------------------------------

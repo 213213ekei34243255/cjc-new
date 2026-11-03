@@ -55,8 +55,20 @@ def password_matches(given):
     return hmac.compare_digest(hashlib.sha256(given.encode()).digest(), hashlib.sha256(expected.encode()).digest())
 
 
+def staff_status():
+    """'ok', 'missing' (no STAFF_PASSWORD on the server) or 'too_short' (under 10 characters). Never reveals the password."""
+    n = len(config.STAFF_PASSWORD)
+    return "missing" if n == 0 else "too_short" if n < 10 else "ok"
+
+
 def staff_configured():
-    return len(config.STAFF_PASSWORD) >= 10
+    return staff_status() == "ok"
+
+
+STAFF_OFF_MESSAGE = {
+    "missing": "Staff sign-in is switched off because the server has no STAFF_PASSWORD. Add it under Environment on your host, then redeploy.",
+    "too_short": "Staff sign-in is switched off because STAFF_PASSWORD on the server is shorter than 10 characters.",
+}
 
 
 def staff_token():

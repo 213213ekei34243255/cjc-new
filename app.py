@@ -129,6 +129,13 @@ def fetch_all_conversations():
         return []
 
 
+_storage = config.storage_info()
+if _storage["persistent"]:
+    app.logger.info("Noah database is on a persistent disk: %s", _storage["path"])
+else:
+    app.logger.warning("Noah database is NOT on a persistent disk (%s). On a host like Render, everything in it is wiped at every restart. "
+                       "Mount a disk and set NOAH_DB_PATH to a file on it, for example /var/data/staff/noah.db", _storage["path"])
+
 init_db()
 brain.legacy_sink = db_insert_message if (DATABASE_URL and psycopg2) else None
 
