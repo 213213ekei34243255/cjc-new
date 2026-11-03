@@ -2,14 +2,43 @@
 a missing optional setting turns the feature off instead of taking the app down."""
 
 import os
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT / "data"
 
 
+def _load_dotenv():
+    """Read ROOT/.env into the environment for local runs. Real environment variables (Render, Docker) always win,
+    empty values are ignored, and tests switch it off with NOAH_SKIP_DOTENV=1 so they can never read real credentials."""
+    if os.environ.get("NOAH_SKIP_DOTENV") == "1":
+        return
+    try:
+        text = (ROOT / ".env").read_text(encoding="utf-8-sig")
+    except OSError:
+        return
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        if line.startswith("export "):
+            line = line[7:]
+        key, _, value = line.partition("=")
+        key, value = key.strip(), value.strip()
+        if len(value) >= 2 and value[0] in "\"'" and value[-1] == value[0]:
+            value = value[1:-1]
+        else:
+            value = re.split(r"\s+#", value, maxsplit=1)[0].strip()
+        if key and value and not os.environ.get(key):
+            os.environ[key] = value
+
+
+_load_dotenv()
+
+
 def env(name, default=""):
-    return os.environ.get(name, default).strip()
+    return os.environ.get(name, "").strip() or default
 
 
 def env_int(name, default, low=None, high=None):
@@ -40,6 +69,8 @@ GEMINI_MODEL_FALLBACKS = [m.strip() for m in env("GEMINI_MODEL_FALLBACKS", "gemi
 GEMINI_API_BASE = env("GEMINI_API_BASE", "https://generativelanguage.googleapis.com").rstrip("/")
 GEMINI_TIMEOUT = env_int("GEMINI_TIMEOUT", 25, 3, 120)
 GEMINI_MAX_TOKENS = env_int("GEMINI_MAX_TOKENS", 700, 64, 4000)
+# The name staff see for the main model on the dashboard. The real service behind it is never named there.
+MODEL_DISPLAY_NAME = env("MODEL_DISPLAY_NAME", "Rexy CogniAI's Foundational Model")
 
 # ---- Qwen via llama-server (backup) ------------------------------------------
 LLAMA_URL = env("LLAMA_URL", "http://127.0.0.1:8080/v1/chat/completions")
@@ -93,6 +124,7 @@ SMTP_PORT = env_int("SMTP_PORT", 587, 1, 65535)
 SMTP_USER = env("SMTP_USER")
 SMTP_PASSWORD = env("SMTP_PASSWORD")
 SMTP_FROM = env("SMTP_FROM") or SMTP_USER
+SMTP_FROM_NAME = env("SMTP_FROM_NAME")           # shown as the sender name, e.g. "CogniAI Studios"
 ADMISSIONS_EMAIL = env("ADMISSIONS_EMAIL")       # leads + visit bookings go here
 COUNSELLING_EMAIL = env("COUNSELLING_EMAIL")     # counselling requests go here
 NOTIFY_WEBHOOK_URL = env("NOTIFY_WEBHOOK_URL")   # Slack / Zapier / Sheets style JSON webhook

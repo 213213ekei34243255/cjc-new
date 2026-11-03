@@ -419,15 +419,20 @@ def parse_json(text):
     raise ValueError("model did not return JSON")
 
 
+_SERVICE_WORDS = re.compile(r"gemini[\w.\-]*|generativelanguage\.googleapis\.com|googleapis\.com", re.I)
+
+
+def scrub(text):
+    """Staff-facing text: the real service and model ids are replaced by the display name."""
+    return _SERVICE_WORDS.sub("Rexy", str(text or ""))
+
+
 def status():
-    """Health snapshot for /api/health (never reveals the key)."""
+    """Dashboard snapshot (never reveals the key, the service behind the main model, or its model ids)."""
+    primary = gemini_breaker.snapshot()
+    primary["last_error"] = scrub(primary.get("last_error"))
     return {
-        "gemini": {
-            "configured": gemini_configured(),
-            "model": config.GEMINI_MODEL,
-            "fallback_models": config.GEMINI_MODEL_FALLBACKS,
-            "breaker": gemini_breaker.snapshot(),
-        },
+        "primary": {"name": config.MODEL_DISPLAY_NAME, "configured": gemini_configured(), "breaker": primary},
         "qwen": {"enabled": config.QWEN_ENABLED, "url": config.LLAMA_URL, "breaker": qwen_breaker.snapshot()},
     }
 

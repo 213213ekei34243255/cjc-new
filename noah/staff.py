@@ -28,7 +28,7 @@ def staff_required(fn):
     @wraps(fn)
     def wrapper(*a, **kw):
         if not auth.staff_configured():
-            return _err("Staff tools are not configured (set STAFF_PASSWORD, at least 10 characters).", 503)
+            return _err(auth.STAFF_OFF_MESSAGE[auth.staff_status()], 503)
         if not auth.staff_from(request):
             return _err("Please sign in as staff.", 401)
         try:
@@ -42,7 +42,7 @@ def staff_required(fn):
 @staff_bp.post("/login")
 def login():
     if not auth.staff_configured():
-        return _err("Staff tools are not configured.", 503)
+        return _err(auth.STAFF_OFF_MESSAGE[auth.staff_status()], 503)
     if not limiter.allow("staff-login", request.remote_addr or "?", 6, 300):
         return _err("Too many attempts. Wait five minutes.", 429)
     data = request.get_json(silent=True) or {}
@@ -56,7 +56,11 @@ def login():
 def overview():
     days = max(1, min(180, int(request.args.get("days", 30) or 30)))
     store = get_store()
-    return jsonify({"analytics": store.analytics(days), "llm": llm.status(),
+    analytics = store.analytics(days)
+    for row in analytics["engines"]:
+        if row["engine"] == "gemini":
+            row["engine"] = "Rexy"                       # the dashboard never shows the underlying service name
+    return jsonify({"analytics": analytics, "llm": llm.status(),
                     "retention_days": config.CHAT_RETENTION_DAYS,
                     "notifications": {"email": bool(config.SMTP_HOST and config.ADMISSIONS_EMAIL), "webhook": bool(config.NOTIFY_WEBHOOK_URL),
                                       "whatsapp": bool(config.WA_ACCESS_TOKEN and config.WA_PHONE_NUMBER_ID)}})
@@ -67,7 +71,11 @@ def overview():
 @staff_required
 def unanswered():
     store = get_store()
-    return jsonify({"open": store.list_unanswered("open"), "disliked": store.list_disliked(), "learned": store.list_learned()})
+    disliked = store.list_disliked()
+    for row in disliked:
+        if row.get("engine") == "gemini":
+            row["engine"] = "Rexy"
+    return jsonify({"open": store.list_unanswered("open"), "disliked": disliked, "learned": store.list_learned()})
 
 
 @staff_bp.post("/unanswered/<int:item_id>/answer")
